@@ -21,9 +21,11 @@ const Room = () => {
 
   const handleSaveFrame = async () => {
     const dataURL = document.querySelector('canvas').toDataURL();
+    const base64Data = dataURL.split(':')[1];
+    // console.log(dataURL)
     await axios.post('http://localhost:4000/api/rooms/frames', {
       roomId,
-      data: dataURL,
+      base64Data: base64Data, 
       createdBy: 'username', // Replace with actual username
     });
   };

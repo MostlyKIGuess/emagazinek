@@ -7,9 +7,43 @@ const cors = require('cors');
 const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
 require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
 
-const s3 = require('./config/awsConfig');
+// const s3 = require('./config/awsConfig');
 
+
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
+
+
+const s3Client = new S3Client({
+
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+
+async function uploadToS3(params) {
+  try {
+    const { ACL, ...uploadParams } = params;
+
+    const upload = new Upload({
+      client: s3Client,
+      params: uploadParams //  exclude ACL
+    });
+
+    const result = await upload.done();
+    console.log('Upload success:', result);
+    return result;
+  } catch (err) {
+    console.error('Upload error:', err);
+    throw err; 
+  }
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -39,94 +73,132 @@ mongoose.connection.on('error', (err) => {
   console.error('MongoDB connection error:', err);
 });
 
-app.post('/api/rooms', async (req, res) => {
-  const { type, creator } = req.body;
-  const newRoom = new Room({ type, creator, frames: [] });
-  await newRoom.save();
-  res.json({ room: newRoom });
-});
+
+
+ app.post('/api/rooms', async (req, res) => {   const { type, creator } = req.body;   const newRoom = new Room({ type, creator, frames: [] });   await newRoom.save();   res.json({ room: newRoom }); });
+
+
+
 
 app.post('/api/rooms/frames', async (req, res) => {
-  const { roomId, s3Url, createdBy } = req.body;
-  const room = await Room.findById(roomId);
-  // console.log(room)
-  if (room) {
-    room.frames.push({ s3Url, createdBy });
-    await room.save();
-    res.json({ message: 'Frame saved' });
-    console.log("Frame saved")
-  } else {
-    res.status(404).json({ message: 'Room not found' });
+  // Assuming roomId and the image data are sent in the request body
+  const { roomId, base64Data, createdBy } = req.body; 
+
+  if (!roomId || !base64Data) {
+    return res.status(400).send('Missing roomId or image data');
+  }
+
+  const params = {
+    Bucket: 'animak',
+    Key: `${Date.now()}_${roomId}.png`,
+    Body: base64Data,
+    ACL: 'public-read',
+    ContentEncoding: 'base64',
+    ContentType: `image/png`
+  };
+
+  try {
+    const s3UploadRes = await uploadToS3(params);
+    const s3Url = s3UploadRes.Location;
+
+    await Room.updateOne(
+      { _id: roomId },
+      { $push: { frames: { s3Url, createdBy } } }
+    );
+  
+    res.json({ message: 'Upload successful', data: s3UploadRes });
+  } catch (err) {
+    return res.status(500).send('Error uploading to S3');
   }
 });
 
+
 // const roomController = require('./controllers/roomController');
+
+
+
+// things i need for merging 
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+async function getSignedUrlForGetObject(Bucket, Key) {
+  try {
+    const command = new GetObjectCommand({ Bucket, Key });
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); 
+    return signedUrl;
+  } catch (error) {
+    console.error("Error generating signed URL", error);
+    throw error;
+  }
+}
+
+
+
+// for merging needs
+const axios = require('axios');
+const { exec } = require('child_process');
+
+
+
 
 app.get('/api/rooms/merge-frames', async (req, res) => {
   const { roomId } = req.query;
-  // console.log(roomId)
-  // console.log("IS THIS WORKING BRO???") yes cutie this is working now
+
   try {
     const room = await Room.findById(roomId);
-    // console.log(room)
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
     const frames = room.frames.map(frame => frame.s3Url);
-    // console.log(frames)
     const tempDir = path.join(__dirname, 'temp', roomId);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    // Download frames from S3 to temp directorsy
-    for (let i = 0; i < frames.length; i++) {
-      const frameUrl = frames[i];
-      const fileName = `${i + 1}.png`; 
-      const filePath = path.join(tempDir, fileName);
+  
+   // Inside the loop where you're downloading frames
+for (let i = 0; i < frames.length; i++) {
+  const frameUrl = frames[i];
+  const fileName = `${i + 1}.png`;
+  const filePath = path.join(tempDir, fileName);
+  // console.log(frameUrl, fileName, filePath);
 
-      const { Bucket, Key } = s3.getSignedUrl('getObject', { Bucket: 'YOUR_BUCKET_NAME', Key: frameUrl });
-      const fileStream = fs.createWriteStream(filePath);
-      s3.getObject({ Bucket, Key }).createReadStream().pipe(fileStream);
-    }
+  const command = new GetObjectCommand({
+    Bucket: 'animak',
+    Key: decodeURIComponent(new URL(frameUrl).pathname.substring(1)), 
+  });
 
-    // Ensure all frames are downloaded before proceeding
-    fileStream.on('close', () => {
-      const outputVideoPath = path.join(tempDir, 'output.mp4');
-      const ffmpegCommand = `ffmpeg -framerate 24 -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
+  const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  const response = await axios({ method: 'get', url: signedUrl, responseType: 'text' }); // because it is a ascii data we need text
+  const base64Data = response.data.split(';base64,').pop(); // gets us the base64 string
+  const buffer = Buffer.from(base64Data, 'base64'); 
 
-      exec(ffmpegCommand, async (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error: ${error}`);
-          return res.status(500).json({ message: 'Error creating video' });
-        }
+  fs.writeFileSync(filePath, buffer); // Write the binary data to a PNG file
 
-        // Upload the video to S3
-        const videoStream = fs.createReadStream(outputVideoPath);
-        const uploadParams = {
-          Bucket: 'YOUR_BUCKET_NAME',
-          Key: `path/to/videos/${roomId}/output.mp4`,
-          Body: videoStream,
-          ACL: 'public-read' // if you want the video to be publicly accessible
-        };
+  
+}
 
-        s3.upload(uploadParams, function(s3Err, data) {
-          if (s3Err) {
-            console.error(`Upload error: ${s3Err}`);
-            return res.status(500).json({ message: 'Error uploading video' });
-          }
+    
+    const outputVideoPath = path.join(tempDir, 'output.mp4');
+    const ffmpegCommand = `ffmpeg -framerate 24 -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
 
-          // Respond with the URL of the uploaded video
-          res.json({ message: 'Video created successfully', videoUrl: data.Location });
-        });
-      });
+    exec(ffmpegCommand, async (error) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return res.status(500).json({ message: 'Error creating video' });
+      }
+
+        
+      res.json({ message: 'Video created successfully', videoPath: outputVideoPath });
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'An error occurred' });
   }
 });
+
+
+
 
 io.on('connection', (socket) => {
   console.log('a user connected');
