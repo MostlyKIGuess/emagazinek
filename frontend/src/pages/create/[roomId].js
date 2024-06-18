@@ -2,13 +2,15 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import Canvas from '../../components/canvas';
 import axios from 'axios';
+import Canvas from '../../components/canvas';
 
 const Room = () => {
   const router = useRouter();
   const { roomId } = router.query;
   const [socket, setSocket] = useState(null);
+  const [videoDuration, setVideoDuration] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
 
   useEffect(() => {
     if (roomId) {
@@ -18,7 +20,6 @@ const Room = () => {
       return () => socketInstance.disconnect();
     }
   }, [roomId]);
-
   const handleSaveFrame = async () => {
     const dataURL = document.querySelector('canvas').toDataURL();
     const base64Data = dataURL.split(':')[1];
@@ -30,9 +31,13 @@ const Room = () => {
     });
   };
 
-  const handleMergeFrames = async () => {
-    await axios.get(`http://localhost:4000/api/rooms/merge-frames?roomId=${roomId}`)
-      .then(response => alert('Frames merged successfully!'))
+   const handleMergeFrames = async () => {
+    await axios.get(`http://localhost:4000/api/rooms/merge-frames?roomId=${roomId}&videoLengthInSeconds=${videoDuration}`)
+      .then(response => {
+        alert('Frames merged successfully!');
+        setVideoUrl(`http://localhost:4000${response.data.videoUrl}`); // Update this line
+        console.log(response.data.videoUrl);
+      })
       .catch(error => alert('Error merging frames: ' + error.message));
   };
 
@@ -42,6 +47,13 @@ const Room = () => {
         <h1 className="text-2xl font-bold text-center mb-4">Room: {roomId}</h1>
         <div className="mb-4">
           <Canvas socket={socket} roomId={roomId} />
+          <input
+            type="text"
+            value={videoDuration}
+            onChange={(e) => setVideoDuration(e.target.value)}
+            placeholder="Enter video duration in seconds"
+            className="input duration-input"
+          />
         </div>
         <div className="flex justify-center space-x-4">
           <button
@@ -57,6 +69,14 @@ const Room = () => {
             Merge Frames
           </button>
         </div>
+        {videoUrl && (
+          <div className="video-container">
+            <video controls>
+              <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
       </div>
     </div>
   );

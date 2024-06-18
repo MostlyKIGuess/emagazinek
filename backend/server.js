@@ -137,11 +137,11 @@ async function getSignedUrlForGetObject(Bucket, Key) {
 const axios = require('axios');
 const { exec } = require('child_process');
 
-
+app.use(express.static('public'));
 
 
 app.get('/api/rooms/merge-frames', async (req, res) => {
-  const { roomId } = req.query;
+  const { roomId, videoLengthInSeconds } = req.query; // Accept videoLengthInSeconds parameter
 
   try {
     const room = await Room.findById(roomId);
@@ -150,13 +150,22 @@ app.get('/api/rooms/merge-frames', async (req, res) => {
     }
 
     const frames = room.frames.map(frame => frame.s3Url);
+    if (frames.length === 0) {
+      return res.status(400).json({ message: 'No frames to merge' });
+    }
+
+    // Ensure videoLengthInSeconds is a positive number
+    const videoLength = Number(videoLengthInSeconds);
+    if (isNaN(videoLength) || videoLength <= 0) {
+      return res.status(400).json({ message: 'Invalid video length' });
+    }
+
     const tempDir = path.join(__dirname, 'temp', roomId);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
   
-   // Inside the loop where you're downloading frames
 for (let i = 0; i < frames.length; i++) {
   const frameUrl = frames[i];
   const fileName = `${i + 1}.png`;
@@ -179,22 +188,29 @@ for (let i = 0; i < frames.length; i++) {
 }
 
     
-    const outputVideoPath = path.join(tempDir, 'output.mp4');
-    const ffmpegCommand = `ffmpeg -framerate 24 -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
+const frameRate = frames.length / videoLength;
 
-    exec(ffmpegCommand, async (error) => {
-      if (error) {
-        console.error(`exec error: ${error}`);
-        return res.status(500).json({ message: 'Error creating video' });
-      }
+const videosDir = path.join(__dirname, 'public', 'videos');
+if (!fs.existsSync(videosDir)) {
+  fs.mkdirSync(videosDir, { recursive: true });
+}
 
-        
-      res.json({ message: 'Video created successfully', videoPath: outputVideoPath });
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'An error occurred' });
+const outputVideoPath = path.join(__dirname, 'public', 'videos', roomId + '.mp4');
+// Use the calculated frame rate in the ffmpeg command
+const ffmpegCommand = `ffmpeg -framerate ${frameRate} -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
+
+exec(ffmpegCommand, async (error) => {
+  if (error) {
+    console.error(`exec error: ${error}`);
+    return res.status(500).json({ message: 'Error creating video' });
   }
+
+  res.json({ message: 'Video created successfully', videoUrl: `/videos/${roomId}.mp4` });
+});
+} catch (error) {
+console.error(error);
+res.status(500).json({ message: 'An error occurred' });
+}
 });
 
 
