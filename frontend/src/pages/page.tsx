@@ -7,7 +7,7 @@ import axios from 'axios';
 export default function Home() {
   const [type, setType] = useState('');
   const [creator, setCreator] = useState('');
-  const router = useRouter(); // Call useRouter directly at the top level
+  const router = useRouter(); // bull shit 
 
   const createRoom = async () => {
     const response = await axios.post('http://localhost:4000/api/rooms', { type, creator });
