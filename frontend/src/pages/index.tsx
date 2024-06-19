@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router'; 
 import axios from 'axios';
 import "../app/globals.css"
+import { Analytics } from '@vercel/analytics/react';
 
 export default function Homes() {
   const [type, setType] = useState('');
@@ -41,6 +42,7 @@ export default function Homes() {
           className="btn btn-primary w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >Create</button>
       </div>
+      <Analytics/>
     </div>
   );
 }
