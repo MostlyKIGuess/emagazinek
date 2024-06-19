@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router'; 
 import axios from 'axios';
-import "../app/globals.css"
 
 export default function Homes() {
   const [type, setType] = useState('');
@@ -20,19 +19,19 @@ export default function Homes() {
     <div className="bg-gradient-to-r from-cream-light to-cream-dark min-h-screen flex items-center justify-center">
       <div className="bg-white/80 rounded-lg p-8 sshadow-lg space-y-4">
         <h1 className="text-2xl font-bold text-center">Create a Room</h1>
-        <input 
+        <input
           type="text"
           placeholder="Type"
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="input input-bordered w-full text-black "
+          className="input input-bordered w-full"
         />
         <input
           type="text"
           placeholder="Creator"
           value={creator}
           onChange={(e) => setCreator(e.target.value)}
-          className="input input-bordered w-full text-black"
+          className="input input-bordered w-full"
         />
         <button
           onClick={createRoom}

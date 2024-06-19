@@ -3,6 +3,10 @@
 # dependencies
 /backend/node_modules
 /frontend/node_modules
+/backend/temp/*
+backend/.env
+/backend/public/**/*.mp4
+
 /.pnp
 .pnp.js
 .yarn/install-state.gz

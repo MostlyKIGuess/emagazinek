@@ -52,7 +52,7 @@ const Room = () => {
             value={videoDuration}
             onChange={(e) => setVideoDuration(e.target.value)}
             placeholder="Enter video duration in seconds"
-            className="input duration-input"
+            className="input duration-input text-black"
           />
         </div>
         <div className="flex justify-center space-x-4">
@@ -70,7 +70,7 @@ const Room = () => {
           </button>
         </div>
         {videoUrl && (
-          <div className="video-container">
+          <div className="video-container mt-10">
             <video controls>
               <source src={videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
