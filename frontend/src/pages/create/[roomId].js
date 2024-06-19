@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 import Canvas from '../../components/canvas';
+import "../../app/globals.css";
 
 const Room = () => {
   const router = useRouter();
