@@ -19,24 +19,26 @@ export default function Homes() {
   return (
     <div className="bg-gradient-to-r from-cream-light to-cream-dark min-h-screen flex items-center justify-center">
       <div className="bg-white/80 rounded-lg p-8 sshadow-lg space-y-4">
-        <h1 className="text-2xl font-bold text-center">Create a Room</h1>
-        <input 
-          type="text"
-          placeholder="Type"
+        <h1 className="text-4xl font-bold text-center">Create a Room</h1>
+        <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="input input-bordered w-full text-black "
-        />
+          className="select select-bordered w-full text-black p-2"
+        >
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
         <input
           type="text"
           placeholder="Creator"
           value={creator}
           onChange={(e) => setCreator(e.target.value)}
-          className="input input-bordered w-full text-black"
+          className="input input-bordered w-full text-black p-2"
         />
         <button
           onClick={createRoom}
-          className="btn btn-primary w-full"
+          className="btn btn-primary w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >Create</button>
       </div>
     </div>

@@ -7,6 +7,8 @@
 backend/.env
 /backend/public/**/*.mp4
 
+/**/*.env
+
 /.pnp
 .pnp.js
 .yarn/install-state.gz
