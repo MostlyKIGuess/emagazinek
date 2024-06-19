@@ -14,7 +14,7 @@ const Room = () => {
 
   useEffect(() => {
     if (roomId) {
-      const socketInstance = io('http://localhost:4000');
+      const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
       socketInstance.emit('joinRoom', roomId);
       return () => socketInstance.disconnect();
@@ -24,7 +24,7 @@ const Room = () => {
   const handleSaveFrame = async () => {
     const dataURL = document.querySelector('canvas').toDataURL();
     const base64Data = dataURL.split(':')[1];
-    await axios.post('http://localhost:4000/api/rooms/frames', {
+    await axios.post('https://emagazinek.onrender.com/api/rooms/frames', {
       roomId,
       base64Data: base64Data, 
       createdBy: 'username', // Replace with actual username
@@ -34,10 +34,10 @@ const Room = () => {
 
   const handleMergeFrames = async () => {
     const duration = videoDuration || '1'; 
-    await axios.get(`http://localhost:4000/api/rooms/merge-frames?roomId=${roomId}&videoLengthInSeconds=${duration}`)
+    await axios.get(`https://emagazinek.onrender.com/api/rooms/merge-frames?roomId=${roomId}&videoLengthInSeconds=${duration}`)
       .then(response => {
         alert('Frames merged successfully!');
-        setVideoUrl(`http://localhost:4000${response.data.videoUrl}`);
+        setVideoUrl(`https://emagazinek.onrender.com${response.data.videoUrl}`);
         console.log(response.data.videoUrl);
       })
       .catch(error => alert('Error merging frames: ' + error.message));

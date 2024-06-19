@@ -75,7 +75,12 @@ mongoose.connection.on('error', (err) => {
 
 
 
- app.post('/api/rooms', async (req, res) => {   const { type, creator } = req.body;   const newRoom = new Room({ type, creator, frames: [] });   await newRoom.save();   res.json({ room: newRoom }); });
+ app.post('/api/rooms', async (req, res) => {   
+  const { type, creator } = req.body;   
+  const newRoom = new Room({ type, creator, frames: [] });   
+  await newRoom.save();   
+  res.json({ room: newRoom });
+ });
 
 
 

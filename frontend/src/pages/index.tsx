@@ -11,7 +11,7 @@ export default function Homes() {
   const router = useRouter(); 
 
   const createRoom = async () => {
-    const response = await axios.post('http://localhost:4000/api/rooms', { type, creator });
+    const response = await axios.post('https://emagazinek.onrender.com/api/rooms', { type, creator });
     const roomId = response.data.room._id;
     router.push(`/create/${roomId}`); 
   };
