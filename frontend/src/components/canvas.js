@@ -7,9 +7,12 @@ const Canvas = ({ socket, roomId }) => {
   const [color, setColor] = useState('#000000');
   const [fillColor, setFillColor] = useState('#FFFFFF');
   const [lineSize, setLineSize] = useState(5);
+  const [isFilling, setIsFilling] = useState(false);
   const [isErasing, setIsErasing] = useState(false);
   const [history, setHistory] = useState([]);
   const [step, setStep] = useState(-1);
+  const [showLastFrame, setShowLastFrame] = useState(false);
+  const overlayCanvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -20,6 +23,15 @@ const Canvas = ({ socket, roomId }) => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineCap = 'round';
     ctxRef.current = ctx;
+
+    const overlayCanvas = overlayCanvasRef.current;
+    overlayCanvas.width = 800;
+    overlayCanvas.height = 600;
+    overlayCanvas.style.position = 'absolute';
+    overlayCanvas.style.left = canvas.offsetLeft + 'px';
+    overlayCanvas.style.top = canvas.offsetTop + 'px';
+    overlayCanvas.style.pointerEvents = 'none'; // canvas click-through
+    overlayCanvas.style.display = 'none'; // hiding the overlay 
   }, []);
 
   const captureState = () => {
@@ -75,10 +87,94 @@ const Canvas = ({ socket, roomId }) => {
     });
   };
 
+
   const stopDrawing = () => {
     setDrawing(false);
     ctxRef.current.beginPath();
   };
+
+
+
+  const fill = (startX, startY) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const startColor = ctx.getImageData(startX, startY, 1, 1).data;
+    const fillColor = hexToRgb(fillColor);  // need to implement a hex to rgb function
+    const pixelStack = [[startX, startY]];
+  
+    while (pixelStack.length) {
+      let newPos, x, y, pixelPos, reachLeft, reachRight;
+      newPos = pixelStack.pop();
+      x = newPos[0];
+      y = newPos[1];
+  
+      
+      while (y >= 0 && matchStartColor(ctx.getImageData(x, y, 1, 1).data, startColor)) {
+        y--;
+      }
+      y++;
+      reachLeft = false;
+      reachRight = false;
+    
+      while (y <= canvas.height - 1 && matchStartColor(ctx.getImageData(x, y, 1, 1).data, startColor)) {
+        ctx.fillStyle = fillColor;
+        ctx.fillRect(x, y, 1, 1);
+  
+        if (x > 0) {
+          if (matchStartColor(ctx.getImageData(x - 1, y, 1, 1).data, startColor)) {
+            if (!reachLeft) {
+              pixelStack.push([x - 1, y]);
+              reachLeft = true;
+            }
+          } else if (reachLeft) {
+            reachLeft = false;
+          }
+        }
+  
+        if (x < canvas.width - 1) {
+          if (matchStartColor(ctx.getImageData(x + 1, y, 1, 1).data, startColor)) {
+            if (!reachRight) {
+              pixelStack.push([x + 1, y]);
+              reachRight = true;
+            }
+          } else if (reachRight) {
+            reachRight = false;
+          }
+        }
+        y++;
+      }
+    }
+  };
+  // this was for fill option btw
+  const handleCanvasClick = (e) => {
+    if (isFilling) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      fill(x, y);
+    }
+  };
+
+  
+
+  const toggleLastFrame = () => {
+    setShowLastFrame(!showLastFrame);
+    const overlayCanvas = overlayCanvasRef.current;
+    const overlayCtx = overlayCanvas.getContext('2d');
+    if (!showLastFrame && history.length > 0) {
+      overlayCanvas.style.display = 'block'; 
+      const lastState = new Image();
+      lastState.src = history[step-1];
+      lastState.onload = () => {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        overlayCtx.drawImage(lastState, 0, 0, overlayCanvas.width, overlayCanvas.height);
+      };
+    } else {
+      overlayCanvas.style.display = 'none'; 
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    }
+  };
+
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -86,7 +182,7 @@ const Canvas = ({ socket, roomId }) => {
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseleave', stopDrawing);
-
+    canvas.addEventListener('click', handleCanvasClick);
     return () => {
       canvas.removeEventListener('mousedown', startDrawing);
       canvas.removeEventListener('mouseup', stopDrawing);
@@ -132,6 +228,10 @@ const Canvas = ({ socket, roomId }) => {
         onMouseMove={draw}
         style={{ display: 'block', margin: '0 auto', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px' }}
       ></canvas>
+       <canvas
+      ref={overlayCanvasRef}
+      style={{ display: 'none' }} 
+    ></canvas>
       <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
         <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: '40px', height: '40px', border: 'none', cursor: 'pointer' }} />
         <input type="range" min="1" max="20" value={lineSize} onChange={(e) => setLineSize(e.target.value)} style={{ cursor: 'pointer' }} />
@@ -139,6 +239,11 @@ const Canvas = ({ socket, roomId }) => {
         <input type="color" value={fillColor} onChange={(e) => setFillColor(e.target.value)} style={{ width: '40px', height: '40px', border: 'none', cursor: 'pointer' }} />
         <button onClick={fillCanvas} style={{ backgroundColor: '#2196F3', color: 'white', border: 'none', borderRadius: '5px', padding: '10px 15px', cursor: 'pointer', fontSize: '16px' }}>Fill Canvas</button>
         <button onClick={undoLastAction} style={{ backgroundColor: '#FFC107', color: 'white', border: 'none', borderRadius: '5px', padding: '10px 15px', cursor: 'pointer', fontSize: '16px' }}>Undo</button>
+        {/* <button onClick={toggleLastFrame} style={{ backgroundColor : showLastFrame? '#FFB6C1' :'pink', color: 'tumbleweed', border:'none',borderRadius:'5px',padding:'10px 15px',cursor:'pointer', }}>
+        {showLastFrame ? 'Hide Last Frame' : 'Show Last Frame'}
+        </button> */}
+        {/* <button onClick={() => setIsFilling(!isFilling)} style={{ backgroundColor: isFilling ? '#FFB6C1' : 'pink', color: 'tumbleweed', border: 'none', borderRadius: '5px', padding: '10px 15px', cursor: 'pointer', fontSize: '16px' }}>{isFilling ? 'Stop Filling' : 'Fill'}</button> */}
+     
       </div>
     </div>
   );

@@ -9,15 +9,26 @@ const Room = () => {
   const router = useRouter();
   const { roomId } = router.query;
   const [socket, setSocket] = useState(null);
-  const [videoDuration, setVideoDuration] = useState('1'); // Default to 1 second
+  const [videoDuration, setVideoDuration] = useState(); // Default to 1 second
   const [videoUrl, setVideoUrl] = useState('');
-  const [frameCount, setFrameCount] = useState(0); // New state for frame count
+  const [frameCount, setFrameCount] = useState(0); 
+  const [isMerging, setIsMerging] = useState(false);
+  const [frames, setFrames] = useState([]);
+
 
   useEffect(() => {
     if (roomId) {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
-      socketInstance.emit('joinRoom', roomId);
+      socketInstance.emit('joinRoom', roomId);    
+      axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`)
+        .then(response => {
+          console.log('Frames fetched', response.data);
+          const fetchedFrames = response.data;
+          setFrameCount(fetchedFrames.length);
+        })
+        .catch(error => console.error('Error fetching frames', error));
+  
       return () => socketInstance.disconnect();
     }
   }, [roomId]);
@@ -28,20 +39,28 @@ const Room = () => {
     await axios.post('https://emagazinek.onrender.com/api/rooms/frames', {
       roomId,
       base64Data: base64Data, 
-      createdBy: 'username', // Replace with actual username
+      createdBy: 'username', 
     });
     setFrameCount(frameCount + 1);
   };
 
   const handleMergeFrames = async () => {
-    const duration = videoDuration || '1'; 
+    setIsMerging(true);
+
+    const duration = videoDuration || 1;
+    if(isNaN(duration) || duration <= 0) {
+      alert('Invalid video duration');
+      setIsMerging(false);
+      return;
+    }
     await axios.get(`https://emagazinek.onrender.com/api/rooms/merge-frames?roomId=${roomId}&videoLengthInSeconds=${duration}`)
       .then(response => {
         alert('Frames merged successfully!');
         setVideoUrl(`https://emagazinek.onrender.com${response.data.videoUrl}`);
         console.log(response.data.videoUrl);
       })
-      .catch(error => alert('Error merging frames: ' + error.message));
+      .catch(error => alert('Error merging frames: ' + error.message))
+      .finally(() => setIsMerging(false));
   };
 
   return (
@@ -76,6 +95,12 @@ const Room = () => {
             Merge Frames
           </button>
         </div>
+        <div className="frames-container">
+        {frames.map((frameUrl, index) => (
+          <img key={index} src={frameUrl} alt={`Frame ${index + 1}`} className="frame-image" />
+        ))}
+      </div>
+        {isMerging && <p className="text-center mt-5 text-black">Merging frames...</p>}
         {videoUrl && (
           <div className="video-container mt-10">
             <video controls>

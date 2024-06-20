@@ -1,140 +1,89 @@
 // backend/controllers/roomController.js
 const Room = require('../models/Room');
 const Frame = require('../models/Frame');
-const s3 = require('../config/s3');
-const multer = require('multer');
-
-const { exec} = require('child_process');
-const path = require('path');
-const fs = require('fs');
-
-const upload = multer({storage: multer.memoryStorage()});
-
-exports.createRoom = async (req, res) => {
-  const { type, creator } = req.body;
-  const key = generateRoomKey();
-
-  const room = new Room({ key, type, creator, participants: [creator] });
-  await room.save();
-
-  res.status(201).json({ room });
-};
-
-exports.getRoom = async (req, res) => {
-  const { roomId } = req.params;
-  const room = await Room.findById(roomId).populate('frames');
-  res.status(200).json({ room });
-};
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
 
 
-function isValidObjectId(id) {
-  return /^[0-9a-fA-F]{24}$/.test(id);
+const s3Client = new S3Client({
+
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+
+async function uploadToS3(params) {
+  try {
+    const { ACL, ...uploadParams } = params;
+
+    const upload = new Upload({
+      client: s3Client,
+      params: uploadParams //  exclude ACL
+    });
+
+    const result = await upload.done();
+    console.log('Upload success:', result);
+    return result;
+  } catch (err) {
+    console.error('Upload error:', err);
+    throw err; 
+  }
 }
 
-exports.addFrame = async (req, res) => {
-  const { roomId, createdBy } = req.body;
+exports.createRoom = async (req, res) => {   
+  const { type, creator } = req.body;   
+  const newRoom = new Room({ type, creator, frames: [] });   
+  await newRoom.save();   
+  res.json({ room: newRoom });
+ };
 
-  if (!isValidObjectId(roomId)) {
-    return res.status(400).json({ error: "Invalid roomId" });
+ exports.addFrameToRoom = async (req, res) => {
+  // Assuming roomId and the image data are sent in the request body
+  const { roomId, base64Data, createdBy } = req.body; 
+
+  if (!roomId || !base64Data) {
+    return res.status(400).send('Missing roomId or image data');
   }
 
-  if (!req.file) {
-    return res.status(400).json({ error: "No frame uploaded" });
-  }
+  const params = {
+    Bucket: 'animak',
+    Key: `${Date.now()}_${roomId}.png`,
+    Body: base64Data,
+    ACL: 'public-read',
+    ContentEncoding: 'base64',
+    ContentType: `image/png`
+  };
 
   try {
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: `${Date.now()}_${roomId}.png`,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype, // Use the file's mimetype
-      ACL: 'public-read',
-    };
+    const s3UploadRes = await uploadToS3(params);
+    const s3Url = s3UploadRes.Location;
 
-    s3.upload(params, async (err, data) => {
-      if (err) {
-        return res.status(500).json({ error: "Error uploading to S3" });
-      }
-      
-      const frame = new Frame({ roomId, s3Url: data.Location, createdBy });
-      await frame.save();
-      // console.log(frame);
-      const room = await Room.findById(roomId);
-      if (!room) {
-        return res.status(404).json({ error: "Room not found" });
-      }
-      
-      room.frames.push(frame._id);
-      await room.save();
-
-      res.status(201).json({ frame });
-    });
-  } catch (error) {
-    return res.status(500).json({ error: "An error occurred while adding the frame" });
+    await Room.updateOne(
+      { _id: roomId },
+      { $push: { frames: { s3Url, createdBy } } }
+    );
+  
+    res.json({ message: 'Upload successful', data: s3UploadRes });
+  } catch (err) {
+    return res.status(500).send('Error uploading to S3');
   }
 };
 
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
-
-exports.mergeFramesToVideo = async (req, res) => {
-  const { roomId } = req.body;
-  console.log("IS THIS WORKING BRO???")
+async function getSignedUrlForGetObject(Bucket, Key) {
   try {
-    const room = await Room.findById(roomId);
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
-
-    const frames = room.frames.map(frame => frame.s3Url);
-    const tempDir = path.join(__dirname, 'temp', roomId);
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-
-    // Download frames from S3 to temp directory
-    for (let i = 0; i < frames.length; i++) {
-      const frameUrl = frames[i];
-      const fileName = `${i + 1}.png`; // Naming files as 1.png, 2.png, ...
-      const filePath = path.join(tempDir, fileName);
-
-      const { Bucket, Key } = s3.getSignedUrl('getObject', { Bucket: 'YOUR_BUCKET_NAME', Key: frameUrl });
-      const fileStream = fs.createWriteStream(filePath);
-      s3.getObject({ Bucket, Key }).createReadStream().pipe(fileStream);
-    }
-
-    // Ensure all frames are downloaded before proceeding
-    fileStream.on('close', () => {
-      const outputVideoPath = path.join(tempDir, 'output.mp4');
-      const ffmpegCommand = `ffmpeg -framerate 24 -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
-
-      exec(ffmpegCommand, async (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error: ${error}`);
-          return res.status(500).json({ message: 'Error creating video' });
-        }
-
-        // Upload the video to S3
-        const videoStream = fs.createReadStream(outputVideoPath);
-        const uploadParams = {
-          Bucket: 'YOUR_BUCKET_NAME',
-          Key: `path/to/videos/${roomId}/output.mp4`,
-          Body: videoStream,
-          ACL: 'public-read' // if you want the video to be publicly accessible
-        };
-
-        s3.upload(uploadParams, function(s3Err, data) {
-          if (s3Err) {
-            console.error(`Upload error: ${s3Err}`);
-            return res.status(500).json({ message: 'Error uploading video' });
-          }
-
-          // Respond with the URL of the uploaded video
-          res.json({ message: 'Video created successfully', videoUrl: data.Location });
-        });
-      });
-    });
+    const command = new GetObjectCommand({ Bucket, Key });
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); 
+    return signedUrl;
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'An error occurred' });
+    console.error("Error generating signed URL", error);
+    throw error;
   }
-};
+}
+
+
+

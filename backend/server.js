@@ -75,51 +75,47 @@ mongoose.connection.on('error', (err) => {
 
 
 
- app.post('/api/rooms', async (req, res) => {   
-  const { type, creator } = req.body;   
-  const newRoom = new Room({ type, creator, frames: [] });   
-  await newRoom.save();   
-  res.json({ room: newRoom });
- });
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`User joined room: ${roomId}`);
+  });
+
+  socket.on('draw', (data) => {
+    io.to(data.roomId).emit('draw', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`listening on *:${PORT}`);
+});
 
 
 
-
-app.post('/api/rooms/frames', async (req, res) => {
-  // Assuming roomId and the image data are sent in the request body
-  const { roomId, base64Data, createdBy } = req.body; 
-
-  if (!roomId || !base64Data) {
-    return res.status(400).send('Missing roomId or image data');
-  }
-
-  const params = {
-    Bucket: 'animak',
-    Key: `${Date.now()}_${roomId}.png`,
-    Body: base64Data,
-    ACL: 'public-read',
-    ContentEncoding: 'base64',
-    ContentType: `image/png`
-  };
-
+app.get('/api/rooms/frames/:roomId', async (req, res) => {
+  const { roomId } = req.params;
   try {
-    const s3UploadRes = await uploadToS3(params);
-    const s3Url = s3UploadRes.Location;
-
-    await Room.updateOne(
-      { _id: roomId },
-      { $push: { frames: { s3Url, createdBy } } }
-    );
-  
-    res.json({ message: 'Upload successful', data: s3UploadRes });
-  } catch (err) {
-    return res.status(500).send('Error uploading to S3');
+    const room = await Room.findById(roomId);
+    res.json(room.frames); 
+  } catch (error) {
+    res.status(500).send('Error fetching frames');
   }
 });
 
 
-// const roomController = require('./controllers/roomController');
 
+
+const { createRoom, addFrameToRoom } = require('./controllers/roomController');
+ app.post('/api/rooms', createRoom);
+app.post('/api/rooms/frames', addFrameToRoom);
 
 
 // things i need for merging 
@@ -191,16 +187,14 @@ for (let i = 0; i < frames.length; i++) {
 
   
 }
-
     
 const frameRate = frames.length / videoLength;
-
 const videosDir = path.join(__dirname, 'public', 'videos');
 if (!fs.existsSync(videosDir)) {
   fs.mkdirSync(videosDir, { recursive: true });
 }
 
-const outputVideoPath = path.join(__dirname, 'public', 'videos', roomId + '.mp4');
+const outputVideoPath = path.join(__dirname, 'public', 'videos', `${roomId}_${Date.now()}` + '.mp4');
 // Use the calculated frame rate in the ffmpeg command
 const ffmpegCommand = `ffmpeg -framerate ${frameRate} -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
 
@@ -210,37 +204,12 @@ exec(ffmpegCommand, async (error) => {
     return res.status(500).json({ message: 'Error creating video' });
   }
 
-  res.json({ message: 'Video created successfully', videoUrl: `/videos/${roomId}.mp4` });
+  res.json({ message: 'Video created successfully', videoUrl: `/videos/${roomId}_${Date.now()}.mp4` });
 });
 } catch (error) {
 console.error(error);
 res.status(500).json({ message: 'An error occurred' });
 }
-});
-
-
-
-
-io.on('connection', (socket) => {
-  console.log('a user connected');
-
-  socket.on('joinRoom', (roomId) => {
-    socket.join(roomId);
-    console.log(`User joined room: ${roomId}`);
-  });
-
-  socket.on('draw', (data) => {
-    io.to(data.roomId).emit('draw', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-});
-
-const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`listening on *:${PORT}`);
 });
 
 
