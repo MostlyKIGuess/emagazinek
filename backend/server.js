@@ -194,7 +194,7 @@ if (!fs.existsSync(videosDir)) {
   fs.mkdirSync(videosDir, { recursive: true });
 }
 
-const outputVideoPath = path.join(__dirname, 'public', 'videos', `${roomId}_${Date.now()}` + '.mp4');
+const outputVideoPath = path.join(__dirname, 'public', 'videos', `${roomId}_${frames.length}` + '.mp4');
 // Use the calculated frame rate in the ffmpeg command
 const ffmpegCommand = `ffmpeg -framerate ${frameRate} -i ${tempDir}/%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
 
@@ -204,7 +204,7 @@ exec(ffmpegCommand, async (error) => {
     return res.status(500).json({ message: 'Error creating video' });
   }
 
-  res.json({ message: 'Video created successfully', videoUrl: `/videos/${roomId}_${Date.now()}.mp4` });
+  res.json({ message: 'Video created successfully', videoUrl: `/videos/${roomId}_${frames.length}.mp4` });
 });
 } catch (error) {
 console.error(error);
