@@ -35,13 +35,13 @@ const Canvas = ({ socket, roomId }) => {
   }, []);
 
   const captureState = () => {
-    setTimeout(() => {
+    // setTimeout(() => {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL();
       const newHistory = history.slice(0, step + 1); 
       setHistory([...newHistory, imageData]);
       setStep(newHistory.length);
-    }, 0);
+    // }, 0);
   };
 
   const undoLastAction = () => {
@@ -60,12 +60,17 @@ const Canvas = ({ socket, roomId }) => {
 
   const startDrawing = (e) => {
     setDrawing(true);
+    const correctedX = e.clientX - canvasRef.current.offsetLeft + window.scrollX;
+    const correctedY = e.clientY - canvasRef.current.offsetTop + window.scrollY;
     ctxRef.current.beginPath();
-    ctxRef.current.moveTo(e.clientX - canvasRef.current.offsetLeft, e.clientY - canvasRef.current.offsetTop);
-    captureState(); 
+    ctxRef.current.moveTo(correctedX, correctedY);
+    captureState();
   };
+  
   const draw = (e) => {
     if (!drawing) return;
+    const correctedX = e.clientX - canvasRef.current.offsetLeft + window.scrollX;
+    const correctedY = e.clientY - canvasRef.current.offsetTop + window.scrollY;
     const ctx = ctxRef.current;
     if (isErasing) {
       ctx.globalCompositeOperation = 'destination-out';
@@ -75,12 +80,12 @@ const Canvas = ({ socket, roomId }) => {
       ctx.strokeStyle = color;
       ctx.lineWidth = lineSize;
     }
-    ctx.lineTo(e.clientX - canvasRef.current.offsetLeft, e.clientY - canvasRef.current.offsetTop);
+    ctx.lineTo(correctedX, correctedY);
     ctx.stroke();
     socket.emit('draw', {
       roomId,
-      x: e.clientX - canvasRef.current.offsetLeft,
-      y: e.clientY - canvasRef.current.offsetTop,
+      x: correctedX,
+      y: correctedY,
       color,
       lineSize,
       isErasing,
