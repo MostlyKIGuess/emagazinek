@@ -22,11 +22,11 @@ const Room = () => {
       setSocket(socketInstance);
       socketInstance.emit('joinRoom', roomId);    
 
-      socketInstance.on('frameSaved', (data) => {
-        console.log('New frame added', data.frame);
-        setFrames((prevFrames) => [...prevFrames, data.frame.s3Url]); 
-        setFrameCount((prevCount) => prevCount + 1);
-      });
+      // socketInstance.on('frameSaved', (data) => {
+      //   console.log('New frame added', data.frame);
+      //   setFrames((prevFrames) => [...prevFrames, data.frame.s3Url]); 
+      //   setFrameCount((prevCount) => prevCount + 1);
+      // });
 
       axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`)
         .then(response => {
