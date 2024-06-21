@@ -35,13 +35,13 @@ const Canvas = ({ socket, roomId }) => {
   }, []);
 
   const captureState = () => {
-    // setTimeout(() => {
+    setTimeout(() => {
       const canvas = canvasRef.current;
       const imageData = canvas.toDataURL();
       const newHistory = history.slice(0, step + 1); 
       setHistory([...newHistory, imageData]);
       setStep(newHistory.length);
-    // }, 0);
+    }, 0);
   };
 
   const undoLastAction = () => {

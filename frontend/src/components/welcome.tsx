@@ -1,4 +1,4 @@
-// src/app/page.tsx
+// src/app/welcome.tsx // this is not in use btw
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/router'; 
