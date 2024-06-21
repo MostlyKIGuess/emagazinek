@@ -21,6 +21,13 @@ const Room = () => {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
       socketInstance.emit('joinRoom', roomId);    
+
+      socketInstance.on('frameSaved', (data) => {
+        console.log('New frame added', data.frame);
+        setFrames((prevFrames) => [...prevFrames, data.frame.s3Url]); 
+        setFrameCount((prevCount) => prevCount + 1);
+      });
+
       axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`)
         .then(response => {
           console.log('Frames fetched', response.data);

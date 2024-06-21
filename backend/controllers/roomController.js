@@ -66,7 +66,13 @@ exports.createRoom = async (req, res) => {
       { $push: { frames: { s3Url, createdBy } } }
     );
   
-    res.json({ message: 'Upload successful', data: s3UploadRes });
+    const frameData = { s3Url, createdBy };
+
+    // Emitting the frameSaved event with the frame data
+    io.to(roomId).emit('frameSaved', { message: 'A new frame was added', frame: frameData });
+
+    // Sending a single response with the frame data
+    return res.status(200).json({ message: 'Frame added successfully', frame: frameData });
   } catch (err) {
     return res.status(500).send('Error uploading to S3');
   }

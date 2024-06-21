@@ -86,6 +86,7 @@ io.on('connection', (socket) => {
 
   socket.on('draw', (data) => {
     io.to(data.roomId).emit('draw', data);
+    socket.broadcast.to(data.roomId).emit('draw', data);
   });
 
   socket.on('disconnect', () => {
