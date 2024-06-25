@@ -7,12 +7,12 @@
 backend/.env
 /backend/public/**/*.mp4
 
-/**/*.env
+/**/*.env*
 
 /.pnp
 .pnp.js
 .yarn/install-state.gz
-/backend/.env
+
 # testing
 /coverage
 
@@ -41,3 +41,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+backend/.env
