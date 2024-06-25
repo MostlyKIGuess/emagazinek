@@ -299,6 +299,11 @@ const Canvas = ({ socket, roomId }) => {
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         onMouseMove={draw}
+        onTouchStart={startDrawingTouch}
+        onTouchMove={drawTouch}
+        onTouchEnd={stopDrawingTouch}
+        onTouchCancel={stopDrawingTouch}
+        
         style={{ display: 'block', margin: '0 auto', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px' }}
       ></canvas>
        <canvas
