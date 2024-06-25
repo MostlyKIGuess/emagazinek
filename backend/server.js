@@ -88,6 +88,9 @@ io.on('connection', (socket) => {
     io.to(data.roomId).emit('draw', data);
     socket.broadcast.to(data.roomId).emit('draw', data);
   });
+  socket.on('sendChatMessage', ({ roomId, message }) => {
+    io.to(roomId).emit('chatMessage', message);
+  });
 
   socket.on('disconnect', () => {
     console.log('user disconnected');

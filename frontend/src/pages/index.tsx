@@ -10,6 +10,8 @@ export default function Homes() {
   const [type, setType] = useState('create'); 
   const [creator, setCreator] = useState('');
   const [roomId, setRoomId] = useState('');
+  const [username, setUsername] = useState('');
+
   const router = useRouter();
 
   const handleAction = async () => {
@@ -20,10 +22,12 @@ export default function Homes() {
     } else if (type === 'join') {
       try {
     
-        const response = await axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`);
+        const response = await axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`,{params: { username }});
         if (response.status === 200 && response.data) {
           
-          router.push(`/join/${roomId}`);
+          router.push(`/join/${roomId}`,
+            { query: { username } }
+          );
         } else {
           
           console.error('Room not found or access denied');
@@ -60,14 +64,23 @@ export default function Homes() {
           />
         )}
         {type === 'join' && (
-          <input
-            type="text"
-            placeholder="Room ID"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            className="input input-bordered w-full text-black p-2"
-          />
-        )}
+            <>
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input input-bordered w-full text-black p-2"
+              />
+              <input
+                type="text"
+                placeholder="Room ID"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                className="input input-bordered w-full text-black p-2"
+              />
+            </>
+          )}
         <button
           onClick={handleAction}
           className="btn btn-primary w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"

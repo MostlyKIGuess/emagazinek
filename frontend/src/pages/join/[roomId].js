@@ -15,18 +15,28 @@ const Room = () => {
   const [isMerging, setIsMerging] = useState(false);
   const [frames, setFrames] = useState([]);
 
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+
+ 
+
 
   useEffect(() => {
     if (roomId) {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
-      socketInstance.emit('joinRoom', roomId);    
+      socketInstance.emit('joinRoom', roomId);   
 
-    //   socketInstance.on('frameSaved', (data) => {
-    //     console.log('New frame added', data.frame);
-    //     setFrames((prevFrames) => [...prevFrames, data.frame.s3Url]); 
-    //     setFrameCount((prevCount) => prevCount + 1);
-    //   });
+      socketInstance.on('chatMessage', (message) => {
+        setChatMessages((prevMessages) => [...prevMessages, message]);
+      });
+  
+
+      // socketInstance.on('frameSaved', (data) => {
+      //   console.log('New frame added', data.frame);
+      //   setFrames((prevFrames) => [...prevFrames, data.frame.s3Url]); 
+      //   setFrameCount((prevCount) => prevCount + 1);
+      // });
 
       axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`)
         .then(response => {
@@ -39,6 +49,13 @@ const Room = () => {
       return () => socketInstance.disconnect();
     }
   }, [roomId]);
+
+  const handleSendChatMessage = () => {
+    if (chatInput.trim()) {
+      socket.emit('sendChatMessage', { roomId, message: chatInput });
+      setChatInput(''); 
+    }
+  };
 
   const handleSaveFrame = async () => {
     const dataURL = document.querySelector('canvas').toDataURL();
@@ -71,6 +88,8 @@ const Room = () => {
   };
 
   return (
+    <div className="flex flex-row w-full ">
+      <div className="main-content flex-1">
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
       <div className="bg-white shadow-xl rounded-lg p-8 m-4 w-full max-w-4xl">
         <h1 className="text-2xl font-bold text-center mb-4 text-black">Room: {roomId}</h1>
@@ -119,6 +138,30 @@ const Room = () => {
        
       </div>
     </div>
+    </div>
+
+    {/* chat starts here */}
+    <div className="chat-container max-w-[400px] w-full bg-gray-100 flex flex-col shadow-lg">
+      <div className="messages flex-1 overflow-y-auto p-4">
+        {chatMessages.map((msg, index) => (
+          <p key={index} className="break-words">{msg}</p>
+        ))}
+      </div>
+      <div className="p-4">
+        <input
+          type="text"
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          placeholder="Type a message..."
+          className="input duration-input text-black border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 w-full px-3 py-2 mb-4"
+        />
+        <button onClick={handleSendChatMessage} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+  // </div>
   );
 };
 
