@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const Chat = require('./models/Chat');
 
 // const s3 = require('./config/awsConfig');
 
