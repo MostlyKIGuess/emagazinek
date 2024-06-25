@@ -55,6 +55,10 @@ const Room = () => {
       setChatInput(''); 
     }
   };
+  const newChatMessage = (message) => {
+    setChatMessages((prevMessages) => [...prevMessages, message]);
+  };
+  
 
   const handleSaveFrame = async () => {
     const dataURL = document.querySelector('canvas').toDataURL();
