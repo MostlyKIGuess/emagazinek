@@ -14,6 +14,7 @@ const Canvas = ({ socket, roomId }) => {
   const [showLastFrame, setShowLastFrame] = useState(false);
   const overlayCanvasRef = useRef(null);
 
+
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.width = 800;
@@ -98,7 +99,19 @@ const Canvas = ({ socket, roomId }) => {
     ctxRef.current.beginPath();
   };
 
-
+  const hexToRgb = (hex) => {
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+      r = parseInt(hex[1] + hex[2], 16);
+      g = parseInt(hex[3] + hex[4], 16);
+      b = parseInt(hex[5] + hex[6], 16);
+    }
+    return `rgb(${r}, ${g}, ${b})`;
+  };
 
   const fill = (startX, startY) => {
     const canvas = canvasRef.current;
@@ -181,6 +194,50 @@ const Canvas = ({ socket, roomId }) => {
   };
 
 
+  const startDrawingTouch = (e) => {
+    e.preventDefault(); 
+    setDrawing(true);
+    const touch = e.touches[0];
+    const correctedX = touch.clientX - canvasRef.current.offsetLeft + window.scrollX;
+    const correctedY = touch.clientY - canvasRef.current.offsetTop + window.scrollY;
+    ctxRef.current.beginPath();
+    ctxRef.current.moveTo(correctedX, correctedY);
+    captureState();
+  };
+  const drawTouch = (e) => {
+    e.preventDefault(); 
+    if (!drawing) return;
+    const touch = e.touches[0];
+    const correctedX = touch.clientX - canvasRef.current.offsetLeft + window.scrollX;
+    const correctedY = touch.clientY - canvasRef.current.offsetTop + window.scrollY;
+    const ctx = ctxRef.current;
+    if (isErasing) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 10;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineSize;
+    }
+    ctx.lineTo(correctedX, correctedY);
+    ctx.stroke();
+    socket.emit('draw', {
+      roomId,
+      x: correctedX,
+      y: correctedY,
+      color,
+      lineSize,
+      isErasing,
+    });
+  };
+  
+  const stopDrawingTouch = (e) => {
+    e.preventDefault(); 
+    setDrawing(false);
+    ctxRef.current.beginPath();
+  };
+
+
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -188,8 +245,19 @@ const Canvas = ({ socket, roomId }) => {
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseleave', stopDrawing);
     canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('touchstart', startDrawingTouch, { passive: false });
+    canvas.addEventListener('touchmove', drawTouch, { passive: false });
+    canvas.addEventListener('touchend', stopDrawingTouch);
+    canvas.addEventListener('touchcancel', stopDrawingTouch); 
+
     return () => {
+      canvas.removeEventListener('touchstart', startDrawingTouch);
+      canvas.removeEventListener('touchmove', drawTouch);
+      canvas.removeEventListener('touchend', stopDrawingTouch);
+      canvas.removeEventListener('touchcancel', stopDrawingTouch);
+      
       canvas.removeEventListener('mousedown', startDrawing);
+      canvas.removeEventListener('mousemove', draw);
       canvas.removeEventListener('mouseup', stopDrawing);
       canvas.removeEventListener('mouseleave', stopDrawing);
     };

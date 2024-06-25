@@ -26,7 +26,7 @@ export default function Homes() {
         if (response.status === 200 && response.data) {
           
           router.push(`/join/${roomId}`,
-            { query: { username } }
+            // { query: { username } }
           );
         } else {
           

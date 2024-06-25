@@ -1,12 +1,13 @@
 // backend/models/Room.js
 const mongoose = require('mongoose');
 const frameSchema = require('./Frame').schema;
-
+const chatSchema = require('./Chat').schema;
 
 const roomSchema = new mongoose.Schema({
   key: String,
   type: String,
-  frames: [frameSchema], // Adjusted to use a subdocument array
+  frames: [frameSchema], 
+  roomChats: [chatSchema],
   creator: String,
   participants: [String],
 });

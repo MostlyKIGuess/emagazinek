@@ -26,7 +26,6 @@ const Room = () => {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
       socketInstance.emit('joinRoom', roomId);   
-
       socketInstance.on('chatMessage', (message) => {
         setChatMessages((prevMessages) => [...prevMessages, message]);
       });
@@ -52,7 +51,7 @@ const Room = () => {
 
   const handleSendChatMessage = () => {
     if (chatInput.trim()) {
-      socket.emit('sendChatMessage', { roomId, message: chatInput });
+      socket.emit('sendChatMessage', { roomId, message: chatInput, createdBy: 'username' });
       setChatInput(''); 
     }
   };
@@ -88,7 +87,7 @@ const Room = () => {
   };
 
   return (
-    <div className="flex flex-row w-full ">
+    <div className="flex flex-row w-full bg-gray-100  ">
       <div className="main-content flex-1">
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
       <div className="bg-white shadow-xl rounded-lg p-8 m-4 w-full max-w-4xl">
@@ -141,11 +140,11 @@ const Room = () => {
     </div>
 
     {/* chat starts here */}
-    <div className="chat-container max-w-[400px] w-full bg-gray-100 flex flex-col shadow-lg">
+    <div className="chat-container max-w-[400px] w-full bg-gray-100 flex flex-col shadow-lg h-screen ">
       <div className="messages flex-1 overflow-y-auto p-4">
-        {chatMessages.map((msg, index) => (
-          <p key={index} className="break-words">{msg}</p>
-        ))}
+      {chatMessages.map((msg, index) => (
+        <p key={index}><strong>{msg.createdBy}:</strong> {msg.message}</p>
+      ))}
       </div>
       <div className="p-4">
         <input

@@ -88,8 +88,13 @@ io.on('connection', (socket) => {
     io.to(data.roomId).emit('draw', data);
     socket.broadcast.to(data.roomId).emit('draw', data);
   });
-  socket.on('sendChatMessage', ({ roomId, message }) => {
-    io.to(roomId).emit('chatMessage', message);
+  socket.on('sendChatMessage', async ({ roomId, message, createdBy }) => {
+    try {
+      const newMessage = await Chat.create({ roomId, message, createdBy });
+      io.to(roomId).emit('newChatMessage', newMessage); 
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   socket.on('disconnect', () => {
