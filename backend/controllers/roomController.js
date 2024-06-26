@@ -86,7 +86,8 @@ exports.addChatMessageToRoom = async (req, res) => {
       { $push: { roomChats: { message, createdBy } } }
     );
 
-    res.json({ message: 'Chat message added' });
+
+    res.json({ message: 'Chat message added',data : { message, createdBy }});
   } catch (err) {
     return res.status(500).send('Error adding chat message');
   }
@@ -106,8 +107,8 @@ exports.fetchFrames = async (req, res) => {
 exports.fetchChats =  async (req, res) => {
   const { roomId } = req.params;
   try {
-    const chatMessages = await Chat.find({ roomId: roomId });
-    res.json(chatMessages);
+    const room = await Room.find({ roomId: roomId });
+    res.json(room.roomChats);
   } catch (error) {
     res.status(500).send('Error fetching chat messages');
   }

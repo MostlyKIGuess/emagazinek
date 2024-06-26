@@ -22,6 +22,7 @@ const Room = () => {
 
 
   useEffect(() => {
+
     if (roomId) {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
@@ -51,6 +52,7 @@ const Room = () => {
         .then(response => {
           // console.log('Chat messages fetched', response.data);
           const fetchedChatMessages = response.data;
+          console.log(fetchedChatMessages)
           setChatMessages(fetchedChatMessages);
         })
         .catch(error => console.error('Error fetching chat messages', error));
