@@ -14,11 +14,30 @@ const Canvas = ({ socket, roomId }) => {
   const [showLastFrame, setShowLastFrame] = useState(false);
   const overlayCanvasRef = useRef(null);
 
+  function isMobile() {
+    
+    const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+
+    
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+
+    return hasTouchScreen || isMobileDevice;
+}
+
 
   useEffect(() => {
+
+
     const canvas = canvasRef.current;
+    if(isMobile()){
+      const ratio = 4/3;
+      canvas.width = window.innerWidth-20;
+      canvas.height = canvas.width / ratio;
+    }else{
     canvas.width = 800;
     canvas.height = 600;
+    }
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
