@@ -18,7 +18,7 @@ const Room = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
 
- 
+  
 
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const Room = () => {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);
       socketInstance.emit('joinRoom', roomId);   
-      socketInstance.on('chatMessage', (message) => {
+      socketInstance.on('newChatMessage', (message) => {
         setChatMessages((prevMessages) => [...prevMessages, message]);
       });
   
@@ -39,25 +39,39 @@ const Room = () => {
 
       axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`)
         .then(response => {
-          console.log('Frames fetched', response.data);
+        //   console.log('Frames fetched', response.data);
           const fetchedFrames = response.data;
           setFrameCount(fetchedFrames.length);
+          setFrames(fetchedFrames);
+        setFrameCount(fetchedFrames.length); 
         })
         .catch(error => console.error('Error fetching frames', error));
   
       return () => socketInstance.disconnect();
     }
-  }, [roomId]);
+    // axios.get(`https://emagazinek.onrender.com/api/rooms/chat/${roomId}`)
+    //   .then(response => {
+    //     // console.log('Chat messages fetched', response.data);
+    //     const fetchedChatMessages = response.data;
+    //     setChatMessages(fetchedChatMessages);
+    //   })
+    //   .catch(error => console.error('Error fetching chat messages', error));
+
+    // return () => socketInstance.disconnect();
+    //   }, [roomId]);
 
   const handleSendChatMessage = () => {
     if (chatInput.trim()) {
+      const newMessage = { createdBy: 'username', message: chatInput }; 
       socket.emit('sendChatMessage', { roomId, message: chatInput, createdBy: 'username' });
+      // setChatMessages((prevMessages) => [...prevMessages, newMessage]); 
       setChatInput(''); 
     }
   };
-  const newChatMessage = (message) => {
-    setChatMessages((prevMessages) => [...prevMessages, message]);
-  };
+  // const newChatMessage = (message) => {
+  //   setChatMessages((prevMessages) => [...prevMessages, message]);
+    
+  // };
   
 
   const handleSaveFrame = async () => {
@@ -67,8 +81,14 @@ const Room = () => {
       roomId,
       base64Data: base64Data, 
       createdBy: 'username', 
-    });
-    setFrameCount(frameCount + 1);
+    }).then(response => {
+        // console.log('Frame saved', response);
+        const savedFrameUrl = response.data.Location;
+        
+        setFrames((prevFrames) => [...prevFrames, savedFrameUrl]);
+        setFrameCount((prevCount) => prevCount + 1);
+        })
+        .catch(error => console.error('Error saving frame', error));
   };
 
   const handleMergeFrames = async () => {
@@ -90,11 +110,61 @@ const Room = () => {
       .finally(() => setIsMerging(false));
   };
 
+  const handleInviteFriend = () => {
+    const inviteLink = `https://emagazinek.vercel.app/join/${roomId}`;
+    navigator.clipboard.writeText(inviteLink)
+      .then(() => {
+        alert('Invite link copied to clipboard!');
+      })
+      .catch(err => {
+        console.error('Error copying invite link: ', err);
+        alert('Failed to copy invite link.');
+      });
+  };
+
+  const fetchAndProcessFrame = async (frameUrl) => {
+    try {
+
+      const response = await axios({
+        method: 'get',
+        url: frameUrl,
+        responseType: 'blob',
+      });
+  
+      const reader = new FileReader();
+      reader.readAsDataURL(response.data);
+      reader.onloadend = function() {
+        const base64data = reader.result;
+        console.log('Base64 data:', base64data);
+        return base64data;
+      };
+    } catch (error) {
+      console.error('Error fetching and processing frame:', error);
+    }
+  };
+
   return (
-    <div className="flex flex-row w-full bg-gray-100  ">
+    <div className="flex flex-row w-full bg-gray-100">
+            {/* <div className="w-1/3 flex flex-col items-center h-screen">
+                <h1 className='text-4xl text-black font-bold mt-10'>Frames</h1>
+                <div className="frames-container w-full flex flex-col items-center justify-center bg-white shadow-lg mt-5 overflow-auto">
+                {frames.length === 0 ? (
+                    <div className="text-xl text-black font-semibold flex items-center justify-center h-full">No frames saved yet</div>
+                ) : (
+                    frames.map((frameUrl, index) => (
+                        console.log(frameUrl),
+                    <img key={index} src={fetchAndProcessFrame(frameUrl)} alt={`Frame ${index + 1}`} className="frame-image m-2" />
+                    ))
+                )}
+                </div>
+            </div> */}
+            
+
+
+
       <div className="main-content flex-1">
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <div className="bg-white shadow-xl rounded-lg p-8 m-4 w-full max-w-4xl">
+      <div className="bg-white shadow-xl rounded-lg p-4 m-4 w-full max-w-4xl">
         <h1 className="text-2xl font-bold text-center mb-4 text-black">Room: {roomId}</h1>
         <div className="mb-5">
           <Canvas socket={socket} roomId={roomId} />
@@ -123,12 +193,15 @@ const Room = () => {
           >
             Merge Frames
           </button>
+          <button
+                onClick={handleInviteFriend}
+                className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+                >
+                Invite a Friend
+                </button>
         </div>
-        <div className="frames-container">
-        {frames.map((frameUrl, index) => (
-          <img key={index} src={frameUrl} alt={`Frame ${index + 1}`} className="frame-image" />
-        ))}
-      </div>
+       
+        
         {isMerging && <p className="text-center mt-5 text-black">Merging frames...</p>}
         {videoUrl && (
           <div className="video-container mt-10">
@@ -144,8 +217,8 @@ const Room = () => {
     </div>
 
     {/* chat starts here */}
-    <div className="chat-container max-w-[400px] w-full bg-gray-100 flex flex-col shadow-lg h-screen ">
-      <div className="messages flex-1 overflow-y-auto p-4">
+    <div className="chat-container max-w-[400px] w-full bg-gray-100 p-4 m-4 flex flex-col shadow-lg h-screen ">
+      <div className="messages flex-1 overflow-y-auto m-4 text-black">
       {chatMessages.map((msg, index) => (
         <p key={index}><strong>{msg.createdBy}:</strong> {msg.message}</p>
       ))}

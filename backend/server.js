@@ -122,6 +122,15 @@ app.get('/api/rooms/frames/:roomId', async (req, res) => {
   }
 });
 
+app.get('/api/rooms/chat/:roomId', async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    const chatMessages = await Chat.find({ roomId: roomId });
+    res.json(chatMessages);
+  } catch (error) {
+    res.status(500).send('Error fetching chat messages');
+  }
+});
 
 
 
@@ -167,7 +176,7 @@ app.get('/api/rooms/merge-frames', async (req, res) => {
       return res.status(400).json({ message: 'No frames to merge' });
     }
 
-    // Ensure videoLengthInSeconds is a positive number
+    // Ensures videoLengthInSeconds is a positive number
     const videoLength = Number(videoLengthInSeconds);
     if (isNaN(videoLength) || videoLength <= 0) {
       return res.status(400).json({ message: 'Invalid video length' });
