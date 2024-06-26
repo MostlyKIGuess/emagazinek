@@ -66,7 +66,7 @@ const Room = () => {
       await axios.post('https://emagazinek.onrender.com/api/rooms/chat', {
         roomId,
         message: chatInput,
-        createdBy
+        createdBy: 'username',
       })
       .then(response => {
         console.log('Chat message sent', response);
@@ -236,7 +236,7 @@ const Room = () => {
       {chatMessages.map((msg, index) => (
         <p key={index}><strong>{msg.createdBy}:</strong> {msg.message}</p>
       ))}
-      </div> 
+      </div>
       <div className="p-4">
         <input
           type="text"

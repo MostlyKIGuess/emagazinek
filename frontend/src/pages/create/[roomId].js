@@ -66,7 +66,7 @@ const Room = () => {
       await axios.post('https://emagazinek.onrender.com/api/rooms/chat', {
         roomId,
         message: chatInput,
-        createdBy
+        createdBy: 'username',
       })
       .then(response => {
         console.log('Chat message sent', response);
