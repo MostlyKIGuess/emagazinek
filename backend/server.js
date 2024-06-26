@@ -112,32 +112,14 @@ server.listen(PORT, () => {
 
 
 
-app.get('/api/rooms/frames/:roomId', async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const room = await Room.findById(roomId);
-    res.json(room.frames); 
-  } catch (error) {
-    res.status(500).send('Error fetching frames');
-  }
-});
 
-app.get('/api/rooms/chat/:roomId', async (req, res) => {
-  const { roomId } = req.params;
-  try {
-    const chatMessages = await Chat.find({ roomId: roomId });
-    res.json(chatMessages);
-  } catch (error) {
-    res.status(500).send('Error fetching chat messages');
-  }
-});
-
-
-
-const { createRoom, addFrameToRoom , addChatMessageToRoom } = require('./controllers/roomController');
- app.post('/api/rooms', createRoom);
+const { createRoom, addFrameToRoom , addChatMessageToRoom ,fetchFrames,fetchChats} = require('./controllers/roomController');
+app.post('/api/rooms', createRoom);
 app.post('/api/rooms/frames', addFrameToRoom);
 app.post('/api/rooms/chat', addChatMessageToRoom);
+app.get('/api/rooms/frames/:roomId', fetchFrames);
+app.get('/api/rooms/chat/:roomId', fetchChats);
+
 
 // things i need for merging 
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');

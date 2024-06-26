@@ -46,6 +46,14 @@ const Room = () => {
         setFrameCount(fetchedFrames.length); 
         })
         .catch(error => console.error('Error fetching frames', error));
+
+        axios.get(`https://emagazinek.onrender.com/api/rooms/chat/${roomId}`)
+        .then(response => {
+          // console.log('Chat messages fetched', response.data);
+          const fetchedChatMessages = response.data;
+          setChatMessages(fetchedChatMessages);
+        })
+        .catch(error => console.error('Error fetching chat messages', error));
   
       return () => socketInstance.disconnect();
     }

@@ -93,3 +93,24 @@ exports.addChatMessageToRoom = async (req, res) => {
 }
 
 
+exports.fetchFrames = async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    const room = await Room.findById(roomId);
+    res.json(room.frames); 
+  } catch (error) {
+    res.status(500).send('Error fetching frames');
+  }
+};
+
+exports.fetchChats =  async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    const chatMessages = await Chat.find({ roomId: roomId });
+    res.json(chatMessages);
+  } catch (error) {
+    res.status(500).send('Error fetching chat messages');
+  }
+};
+
+
