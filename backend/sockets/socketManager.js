@@ -18,7 +18,7 @@ function setupSocket(io) {
       try {
         const newMessage = await Chat.create({ roomId, message, createdBy });
         io.to(roomId).emit('newChatMessage', newMessage); 
-        socket.broadcast.to(roomId).emit('newChatMessage', newMessage);
+        // socket.broadcast.to(roomId).emit('newChatMessage', newMessage);
       } catch (error) {
         console.error(error);
       }

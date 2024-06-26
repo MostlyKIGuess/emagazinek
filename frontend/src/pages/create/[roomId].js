@@ -61,7 +61,7 @@ const Room = () => {
         })
         .then((response) => {
           console.log("Chat message sent", response);
-          setChatMessages((prevMessages) => [...prevMessages, newMessage]);
+          // setChatMessages((prevMessages) => [...prevMessages, newMessage]);
         })
         .catch((error) => console.error("Error sending chat message", error));
 
@@ -116,6 +116,7 @@ const Room = () => {
       .finally(() => setIsMerging(false));
   };
 
+  
   const handleInviteFriend = () => {
     const inviteLink = `https://emagazinek.vercel.app/join/${roomId}`;
     navigator.clipboard
@@ -130,25 +131,11 @@ const Room = () => {
   };
 
   return (
-    <div className="flex flex-row w-full bg-gray-100">
-      {/* <div className="w-1/3 flex flex-col items-center h-screen">
-                <h1 className='text-4xl text-black font-bold mt-10'>Frames</h1>
-                <div className="frames-container w-full flex flex-col items-center justify-center bg-white shadow-lg mt-5 overflow-auto">
-                {frames.length === 0 ? (
-                    <div className="text-xl text-black font-semibold flex items-center justify-center h-full">No frames saved yet</div>
-                ) : (
-                    frames.map((frameUrl, index) => (
-                        console.log(frameUrl),
-                    <img key={index} src={fetchAndProcessFrame(frameUrl)} alt={`Frame ${index + 1}`} className="frame-image m-2" />
-                    ))
-                )}
-                </div>
-            </div> */}
-
-      <div className="main-content flex-1">
+    <div className="flex flex-col md:flex-row w-full bg-gray-100">
+      <div className="main-content flex-grow">
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
           <div className="bg-white shadow-xl rounded-lg p-4 m-4 w-full max-w-4xl">
-            <h1 className="text-2xl font-bold text-center mb-4 text-black">
+            <h1 className="text-xl md:text-2xl font-bold text-center mb-4 text-black">
               Room: {roomId}
             </h1>
             <div className="mb-5">
@@ -161,7 +148,7 @@ const Room = () => {
                 className="input duration-input text-black mt-2 w-full px-3 py-2 rounded-lg border-2 border-gray-200 outline-none focus:border-blue-500 transition-colors"
               />
             </div>
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
               <div className="frame-counter mt-2 text-black ">
                 <p>Frame Count: {frameCount}</p>
               </div>
@@ -227,9 +214,7 @@ const Room = () => {
         </div>
       </div>
     </div>
-    // </div>
   );
 };
 
-export default Room;
-
+export default Room;  
