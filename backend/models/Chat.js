@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const frameSchema = new mongoose.Schema({
   roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
-  messagee : String,
+  message : String,
   createdBy: String,
 });
 

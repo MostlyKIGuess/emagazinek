@@ -17,16 +17,17 @@ export default function Homes() {
   const [username, setUsername] = useState('');
 
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleAction = async () => {
     if (type === 'create') {
-      const response = await axios.post('https://emagazinek.onrender.com/api/rooms', { creator });
+      const response = await axios.post(`${API_URL}/api/rooms`, { creator });
       const newRoomId = response.data.room._id;
       router.push(`/create/${newRoomId}`);
     } else if (type === 'join') {
       try {
     
-        const response = await axios.get(`https://emagazinek.onrender.com/api/rooms/frames/${roomId}`,{params: { username }});
+        const response = await axios.get(`${API_URL}/api/rooms/frames/${roomId}`, {params: { username }});
         if (response.status === 200 && response.data) {
           
           router.push(`/join/${roomId}`,
