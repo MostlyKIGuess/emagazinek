@@ -22,6 +22,7 @@ const Room = () => {
 
 
   useEffect(() => {
+
     if (roomId) {
       const socketInstance = io('https://emagazinek.onrender.com');
       setSocket(socketInstance);

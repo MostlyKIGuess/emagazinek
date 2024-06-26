@@ -5,6 +5,10 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import "../app/globals.css"
 import { Analytics } from '@vercel/analytics/react';
+import { Container, Typography, TextField, Button, Select, MenuItem, Box } from '@mui/material';
+import '@fontsource/permanent-marker'; 
+
+
 
 export default function Homes() {
   const [type, setType] = useState('create'); 
@@ -41,52 +45,87 @@ export default function Homes() {
       }
     }
   };
-
   return (
-    <div className="bg-gradient-to-r from-cream-light to-cream-dark min-h-screen flex items-center justify-center">
-      <div className="bg-white/80 rounded-lg p-8 shadow-lg space-y-4">
-        <h1 className="text-4xl font-bold text-center">Room Action</h1>
-        <select
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(to right, #1e1679, #b19d39)',
+        display: 'flex',
+        flexDirection: 'column', 
+        alignItems: 'center',
+        justifyContent: 'center',
+        // padding: 4, 
+      }}
+    >
+       <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        align="center"
+        sx={{
+          color: 'white',
+          marginBottom: 4,
+          maxWidth: 600,
+          fontFamily: '"Permanent Marker", cursive', 
+        }}
+      >
+        Welcome to <span style={{ color: '#ff1f89' }}>emagazineK</span>, a place where people can collaborate with their friends and make flip book animation while chatting. Please make a room to start.
+      </Typography>
+      <Container maxWidth="sm" sx={{ background: '#ffffffaa', padding: 4, borderRadius: 2, boxShadow: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center" color='textPrimary'>
+          Room Action
+        </Typography>
+        <Select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="select select-bordered w-full text-black p-2"
+          fullWidth
+          displayEmpty
+          inputProps={{ 'aria-label': 'Without label' }}
+          variant="outlined"
+          sx={{ marginBottom: 2 }}
         >
-          <option value="create">Create Room</option>
-          <option value="join">Join Room</option>
-        </select>
+          <MenuItem value="create">Create Room</MenuItem>
+          <MenuItem value="join">Join Room</MenuItem>
+        </Select>
         {type === 'create' && (
-          <input
-            type="text"
-            placeholder="Creator"
+          <TextField
+            label="Creator"
+            variant="outlined"
+            fullWidth
             value={creator}
             onChange={(e) => setCreator(e.target.value)}
-            className="input input-bordered w-full text-black p-2"
+            margin="normal"
           />
         )}
         {type === 'join' && (
-            <>
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="input input-bordered w-full text-black p-2"
-              />
-              <input
-                type="text"
-                placeholder="Room ID"
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value)}
-                className="input input-bordered w-full text-black p-2"
-              />
-            </>
-          )}
-        <button
+          <>
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              label="Room ID"
+              variant="outlined"
+              fullWidth
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+              margin="normal"
+            />
+          </>
+        )}
+        <Button
           onClick={handleAction}
-          className="btn btn-primary w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >{type === 'create' ? 'Create' : 'Join'}</button>
-      </div>
-      <Analytics/>
-    </div>
+          variant="contained"
+          fullWidth
+          sx={{ marginTop: 2, backgroundColor: '#b13965', '&:hover': { backgroundColor: '#9b3259' } }}
+        >
+          {type === 'create' ? 'Create' : 'Join'}
+        </Button>
+      </Container>
+    </Box>
   );
 }
