@@ -73,18 +73,23 @@ exports.createRoom = async (req, res) => {
   }
 };
 
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+exports.addChatMessageToRoom = async (req, res) => {
+  const { roomId, message, createdBy } = req.body;
 
-async function getSignedUrlForGetObject(Bucket, Key) {
+  if (!roomId || !message) {
+    return res.status(400).send('Missing roomId or message');
+  }
+
   try {
-    const command = new GetObjectCommand({ Bucket, Key });
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); 
-    return signedUrl;
-  } catch (error) {
-    console.error("Error generating signed URL", error);
-    throw error;
+    await Room.updateOne(
+      { _id: roomId },
+      { $push: { roomChats: { message, createdBy } } }
+    );
+
+    res.json({ message: 'Chat message added' });
+  } catch (err) {
+    return res.status(500).send('Error adding chat message');
   }
 }
-
 
 

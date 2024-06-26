@@ -60,10 +60,22 @@ const Room = () => {
     // return () => socketInstance.disconnect();
       }, [roomId]);
 
-  const handleSendChatMessage = () => {
+  const handleSendChatMessage = async () => {
     if (chatInput.trim()) {
       const newMessage = { createdBy: 'username', message: chatInput }; 
+      await axios.post('https://emagazinek.onrender.com/api/rooms/chat', {
+        roomId,
+        message: chatInput,
+        createdBy
+      })
+      .then(response => {
+        console.log('Chat message sent', response);
+        setChatMessages((prevMessages) => [...prevMessages, newMessage]);
+      })
+      .catch(error => console.error('Error sending chat message', error));
+      
       socket.emit('sendChatMessage', { roomId, message: chatInput, createdBy: 'username' });
+
       // setChatMessages((prevMessages) => [...prevMessages, newMessage]); 
       setChatInput(''); 
     }
@@ -90,6 +102,8 @@ const Room = () => {
         })
         .catch(error => console.error('Error saving frame', error));
   };
+
+
 
   const handleMergeFrames = async () => {
     setIsMerging(true);

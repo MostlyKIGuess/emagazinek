@@ -134,10 +134,10 @@ app.get('/api/rooms/chat/:roomId', async (req, res) => {
 
 
 
-const { createRoom, addFrameToRoom } = require('./controllers/roomController');
+const { createRoom, addFrameToRoom , addChatMessageToRoom } = require('./controllers/roomController');
  app.post('/api/rooms', createRoom);
 app.post('/api/rooms/frames', addFrameToRoom);
-
+app.post('/api/rooms/chat', addChatMessageToRoom);
 
 // things i need for merging 
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
