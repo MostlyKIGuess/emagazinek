@@ -49,13 +49,22 @@ const Room = () => {
   
       return () => socketInstance.disconnect();
     }
-  }, [roomId]);
+    // axios.get(`https://emagazinek.onrender.com/api/rooms/chat/${roomId}`)
+    //   .then(response => {
+    //     // console.log('Chat messages fetched', response.data);
+    //     const fetchedChatMessages = response.data;
+    //     setChatMessages(fetchedChatMessages);
+    //   })
+    //   .catch(error => console.error('Error fetching chat messages', error));
+
+    // return () => socketInstance.disconnect();
+      }, [roomId]);
 
   const handleSendChatMessage = () => {
     if (chatInput.trim()) {
       const newMessage = { createdBy: 'username', message: chatInput }; 
       socket.emit('sendChatMessage', { roomId, message: chatInput, createdBy: 'username' });
-      setChatMessages((prevMessages) => [...prevMessages, newMessage]); 
+      // setChatMessages((prevMessages) => [...prevMessages, newMessage]); 
       setChatInput(''); 
     }
   };

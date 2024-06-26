@@ -58,7 +58,7 @@ const Room = () => {
     //   .catch(error => console.error('Error fetching chat messages', error));
 
     // return () => socketInstance.disconnect();
-    //   }, [roomId]);
+      }, [roomId]);
 
   const handleSendChatMessage = () => {
     if (chatInput.trim()) {
