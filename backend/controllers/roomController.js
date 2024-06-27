@@ -107,11 +107,13 @@ exports.fetchFrames = async (req, res) => {
 exports.fetchChats =  async (req, res) => {
   const { roomId } = req.params;
   try {
-    const room = await Room.find({ roomId: roomId });
+    const room = await Room.findById(roomId);
     res.json(room.roomChats);
   } catch (error) {
     res.status(500).send('Error fetching chat messages');
   }
 };
+
+
 
 

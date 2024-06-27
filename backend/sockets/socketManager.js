@@ -24,6 +24,15 @@ function setupSocket(io) {
       }
     });
 
+    socket.on('updateFrameCount', async ({ roomId, frameCount }) => {
+      try {
+        console.log('frameCount', frameCount);
+        io.to(roomId).emit('updateFrameCount', frameCount);
+      } catch (error) {
+        console.error(error);
+      }
+    })
+
     socket.on('disconnect', () => {
       console.log('user disconnected');
     });
