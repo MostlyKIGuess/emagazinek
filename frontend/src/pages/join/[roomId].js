@@ -4,6 +4,8 @@ import io from "socket.io-client";
 import axios from "axios";
 import Canvas from "../../components/canvas";
 import "../../app/globals.css";
+import { CircularProgress } from "@mui/material";
+
 
 const Room = () => {
   const router = useRouter();
@@ -14,10 +16,43 @@ const Room = () => {
   const [frameCount, setFrameCount] = useState(0);
   const [isMerging, setIsMerging] = useState(false);
   const [frames, setFrames] = useState([]);
-
+  const [isLoading, setIsLoading] = useState(false); 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const HF_TOKEN = process.env.NEXT_PUBLIC_HF_TOKEN;
+
+  const [inspirationPrompt, setInspirationPrompt] = useState("");
+  const [inspirationImage, setInspirationImage] = useState(null);
+
+  
+  async function query(data) {
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/prompthero/openjourney-v4",
+      {
+        headers: { Authorization: `Bearer ${HF_TOKEN}` },
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
+    console.log(response);
+    const result = await response.blob();
+    return URL.createObjectURL(result); 
+  }
+  
+  const handleInspirationSubmit = async () => {
+    if (!inspirationPrompt.trim()) return;
+    setIsLoading(true); // Start loading
+    try {
+      const imageSrc = await query({ "inputs": inspirationPrompt });
+      setInspirationImage(imageSrc);
+      setInspirationPrompt("");
+    } catch (error) {
+      console.error("Error fetching inspiration image", error);
+    } finally {
+      setIsLoading(false); 
+    }
+  };
 
   useEffect(() => {
     if (roomId) {
@@ -132,6 +167,39 @@ const Room = () => {
 
   return (
     <div className="flex flex-col md:flex-row w-full bg-gray-100">
+  
+      
+            <div className="inspiration-container max-w-[400px] w-full bg-gray-100 p-4 m-4 flex flex-col shadow-lg">
+              <h1 className="text-xl md:text-3xl font-bold text-center mb-4 text-black">
+                Get Inspiration
+              </h1>
+
+             {isLoading &&<div className="flex items-center justify-center">
+              <CircularProgress />
+              </div>
+              }
+              { inspirationImage && (
+                <div className="image-container pb-4">
+                  <img src={inspirationImage} alt="Inspiration" className="max-w-full h-auto" />
+                </div>
+              )}
+              <input
+                type="text"
+                value={inspirationPrompt}
+                onChange={(e) => setInspirationPrompt(e.target.value)}
+                placeholder="Enter your prompt..."
+                className="input text-black border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 w-full px-3 py-2 mb-4"
+              />
+              <button
+                onClick={handleInspirationSubmit}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+              >
+                Generate Inspiration
+              </button>
+            </div>
+        
+
+
       <div className="main-content flex-grow">
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
           <div className="bg-white shadow-xl rounded-lg p-4 m-4 w-full max-w-4xl">
