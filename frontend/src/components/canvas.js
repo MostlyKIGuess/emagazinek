@@ -32,7 +32,7 @@ const Canvas = ({ socket, roomId }) => {
     const canvas = canvasRef.current;
     if(isMobile()){
       const ratio = 4/3;
-      canvas.width = window.innerWidth-20;
+      canvas.width = window.innerWidth-40;
       canvas.height = canvas.width / ratio;
     }else{
     canvas.width = 800;

@@ -35,7 +35,7 @@ const Room = () => {
         body: JSON.stringify(data),
       }
     );
-    console.log(response);
+    // console.log(response);
     const result = await response.blob();
     return URL.createObjectURL(result); 
   }
