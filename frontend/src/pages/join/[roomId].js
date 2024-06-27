@@ -62,6 +62,9 @@ const Room = () => {
       socketInstance.on("newChatMessage", (message) => {
         setChatMessages((prevMessages) => [...prevMessages, message]);
       });
+      socketInstance.on("updateFrameCount", (count) => {
+        setFrameCount(count);
+      })
 
       axios
         .get(`${API_URL}/api/rooms/frames/${roomId}`)
@@ -77,13 +80,20 @@ const Room = () => {
         .get(`${API_URL}/api/rooms/chat/${roomId}`)
         .then((response) => {
           const fetchedChatMessages = response.data;
-          console.log(fetchedChatMessages);
+          // console.log(fetchedChatMessages);
+          setChatMessages(fetchedChatMessages);
         })
         .catch((error) => console.error("Error fetching chat messages", error));
 
       return () => socketInstance.disconnect();
     }
+
+
   }, [roomId, API_URL]);
+
+
+
+
 
   const handleSendChatMessage = async () => {
     if (chatInput.trim()) {
@@ -121,17 +131,17 @@ const Room = () => {
         createdBy: "username",
       })
       .then((response) => {
-        const savedFrameUrl = response.data.Location;
+   
+        setFrameCount((frameCount) => frameCount + 1);
 
-        setFrames((prevFrames) => [...prevFrames, savedFrameUrl]);
-        setFrameCount((prevCount) => prevCount + 1);
+        socket.emit("updateFrameCount", { roomId, frameCount: frameCount + 1});
       })
       .catch((error) => console.error("Error saving frame", error));
   };
 
+
     const handleMergeFrames = async () => {
     setIsMerging(true);
-
     const duration = videoDuration || 1;
     if (isNaN(duration) || duration <= 0) {
       alert("Invalid video duration");
@@ -164,8 +174,9 @@ const Room = () => {
         alert("Failed to copy invite link.");
       });
   };
-  const handleShareVideo = () => {
- 
+
+
+  const handleShareVideo = () => { 
     const videoShareUrl = videoUrl; 
     navigator.clipboard.writeText(videoShareUrl)
       .then(() => {
@@ -173,14 +184,7 @@ const Room = () => {
       })
       .catch(err => console.error("Failed to copy video link: ", err));
   };
-  const handleDownloadVideo = () => {
-    const link = document.createElement('a');
-    link.href = videoUrl; 
-    link.download = "madewithemagazinek.mp4"; 
-    document.body.appendChild(link); 
-    link.click(); 
-    document.body.removeChild(link); 
-  };
+
   
 
   return (
@@ -192,7 +196,7 @@ const Room = () => {
                 Get Inspiration
               </h1>
 
-             {isLoading &&<div className="flex items-center justify-center">
+             {isLoading &&<div className="flex items-center justify-center mb-2">
               <CircularProgress />
               </div>
               }

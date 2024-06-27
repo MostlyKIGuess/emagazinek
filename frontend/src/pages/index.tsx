@@ -7,13 +7,22 @@ import "../app/globals.css"
 import { Analytics } from '@vercel/analytics/react';
 import { Container, Typography, TextField, Button, Select, MenuItem, Box } from '@mui/material';
 import '@fontsource/permanent-marker'; 
+import { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: "emagazinek",
+  description: "An app to make flip book with gen AI for inspiration.",
+};
 
 
 export default function Homes() {
   const [type, setType] = useState('create'); 
   const [creator, setCreator] = useState('');
-  const [roomId, setRoomId] = useState('');
+  const [roomId, setRoomId] = useState(''); 
   const [username, setUsername] = useState('');
 
   const router = useRouter();
@@ -50,7 +59,7 @@ export default function Homes() {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(to right, #1e1679, #b19d39)',
+        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,255,255,0.7) 100%)',
         display: 'flex',
         flexDirection: 'column', 
         alignItems: 'center',
