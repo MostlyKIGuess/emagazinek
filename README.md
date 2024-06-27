@@ -65,14 +65,19 @@ cd frontend
 ```bash
 npm install
 ```
+3. Create a .env file in the frontend directory with the following configuration:
+```
+NEXT_PUBLIC_API_URL=Your site for routing request
+NEXT_PUBLIC_HF_TOKEN=Your HF Token 
+```
+ - for the local env usage you can keep public api url as http://localhost:4000 as that will be the default backend port.
 
-
-3. Start the development server:
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open http://localhost:3000 with your browser to see the result.
+5. Open http://localhost:3000 with your browser to see the result.
 
 
 ## Collaboration
