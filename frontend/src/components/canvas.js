@@ -45,8 +45,8 @@ const Canvas = ({ socket, roomId }) => {
     ctxRef.current = ctx;
 
     const overlayCanvas = overlayCanvasRef.current;
-    overlayCanvas.width = 800;
-    overlayCanvas.height = 600;
+    overlayCanvas.width = canvas.width;
+    overlayCanvas.height = canvas.height;
     overlayCanvas.style.position = 'absolute';
     overlayCanvas.style.left = canvas.offsetLeft + 'px';
     overlayCanvas.style.top = canvas.offsetTop + 'px';
