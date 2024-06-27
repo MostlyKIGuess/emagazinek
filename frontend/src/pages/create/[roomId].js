@@ -164,6 +164,24 @@ const Room = () => {
         alert("Failed to copy invite link.");
       });
   };
+  const handleShareVideo = () => {
+ 
+    const videoShareUrl = videoUrl; 
+    navigator.clipboard.writeText(videoShareUrl)
+      .then(() => {
+        alert("Video link copied to clipboard! You can now paste and share it on your social media.");
+      })
+      .catch(err => console.error("Failed to copy video link: ", err));
+  };
+  const handleDownloadVideo = () => {
+    const link = document.createElement('a');
+    link.href = videoUrl; 
+    link.download = "madewithemagazinek.mp4"; 
+    document.body.appendChild(link); 
+    link.click(); 
+    document.body.removeChild(link); 
+  };
+  
 
   return (
     <div className="flex flex-col md:flex-row w-full bg-gray-100">
@@ -245,11 +263,15 @@ const Room = () => {
               <p className="text-center mt-5 text-black">Merging frames...</p>
             )}
             {videoUrl && (
-              <div className="video-container mt-10">
+              <div className="video-container mt-10 flex flex-col  items-center justify-center">
                 <video controls>
-                  <source src={videoUrl} type="video/mp4" />
+                  <source src={videoUrl} type="video/mp4"  />
                   Your browser does not support the video tag.
                 </video>
+                <button onClick={handleShareVideo} className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mt-2 align-center justify-center">
+                Share Video
+                </button>
+                
               </div>
             )}
           </div>
