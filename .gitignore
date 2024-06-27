@@ -6,7 +6,8 @@
 /backend/temp/*
 backend/.env
 /backend/public/**/*.mp4
-
+.*
+!.gitignore
 /**/*.env*
 
 /.pnp
