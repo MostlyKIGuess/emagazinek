@@ -2,12 +2,13 @@
 An app to make flipbook with friends with Generative AI for assistance.
 
 ## Overview
-emagazineK is a dynamic platform designed to revolutionize the way we create and share flipbooks. Leveraging the power of Generative AI, it offers a unique blend of creativity and collaboration, allowing users to craft stunning flipbooks with ease. Whether you're looking to preserve memories, present ideas, or simply express your creativity, emagazineK provides the tools and technology to bring your vision to life.
+emagazineK is a web app that allows users to join or create rooms based on their preferences to collaborate on creating animation frames in real-time with friends. Additionally, users can query an Image Generation model for more inspiration.
 
 ## Features
-- **Generative AI Assistance**: Utilize cutting-edge AI to generate content and enhance your flipbooks.
-- **Collaborative Editing**: Work with friends in real-time to create flipbooks together.
-- **Easy Sharing**: Share your creations with a wider audience through seamless integration.
+- **Generative AI Assistance**: Utilizes HF models to generate Images from text.
+- **Collaborative Editing**: Work with friends in real-time to create flipbooks together with socket io connections.
+<!-- - **Easy Sharing**: Share your creations with a wider audience through seamless integration. -->
+- **Chat Functionality**: Along with realtime on canvas drawings it provides live chat feature for the same room for better communication.
 
 ## APIs Utilized
 - Hugging Face Serverless API
