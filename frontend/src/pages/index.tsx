@@ -24,11 +24,17 @@ export default function Homes() {
   const [creator, setCreator] = useState('');
   const [roomId, setRoomId] = useState(''); 
   const [username, setUsername] = useState('');
+  const [creatingRoom, setCreatingRoom] = useState(false);
+
 
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleAction = async () => {
+    if (creatingRoom) {
+      return;
+    }
+    setCreatingRoom(true);
     if (type === 'create') {
       const response = await axios.post(`${API_URL}/api/rooms`, { creator });
       const newRoomId = response.data.room._id;
@@ -55,11 +61,13 @@ export default function Homes() {
       }
     }
   };
+
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,255,255,0.7) 100%)',
+        background: 'radial-gradient(circle, rgba(0,50,50,0.5) 0%, rgba(0,255,255,0.6) 100%)',
         display: 'flex',
         flexDirection: 'column', 
         alignItems: 'center',
@@ -79,7 +87,8 @@ export default function Homes() {
           fontFamily: '"Permanent Marker", cursive', 
         }}
       >
-        Welcome to <span style={{ color: '#ff1f89' }}>emagazineK</span>, a place where people can collaborate with their friends and make flip book animation while chatting. Please make a room to start.
+        Welcome to <span style={{ color: '#ff1f89' }}>emagazineK!</span> Here, you can chat with friends and create flip book animations together. Start your room now and bring your ideas to life!
+        {/* Welcome to <span style={{ color: '#ff1f89' }}>emagazineK</span>, a place where people can collaborate with their friends and make flip book animation while chatting. Please make a room to start. */}
       </Typography>
       <Container maxWidth="sm" sx={{ background: '#ffffffaa', padding: 4, borderRadius: 2, boxShadow: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" color='textPrimary'>
@@ -97,6 +106,11 @@ export default function Homes() {
           <MenuItem value="create">Create Room</MenuItem>
           <MenuItem value="join">Join Room</MenuItem>
         </Select>
+        {creatingRoom && (
+          <Typography variant="h6" sx={{ color: 'black', textAlign: 'center', marginBottom: 2 }}>
+            Creating room...Pls wait
+          </Typography>
+        )}
         {type === 'create' && (
           <TextField
             label="Creator"

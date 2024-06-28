@@ -201,8 +201,8 @@ const Room = () => {
               </div>
               }
               { inspirationImage && (
-                <div className="image-container pb-4">
-                  <img src={inspirationImage} alt="Inspiration" className="max-w-full h-auto" />
+                <div className="image-container pb-4 text-black">
+                  <img src={inspirationImage} alt="Service Not Available Right Now, try again in 2 mins" className="max-w-full h-auto" />
                 </div>
               )}
               <input
