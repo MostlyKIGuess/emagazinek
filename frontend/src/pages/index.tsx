@@ -86,7 +86,7 @@ export default function Homes() {
           color: 'black',
           marginBottom: 4,
           maxWidth: 600,
-          fontFamily: '"Permanent Marker", 
+          fontFamily: "Permanent Marker", 
         }}
       >
         Welcome to <span style={{ color: '#ff1f89' }}>emagazineK!</span> Here, you can chat with friends and create flip book animations together. Start your room now and bring your ideas to life!
