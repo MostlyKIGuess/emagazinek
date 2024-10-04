@@ -33,22 +33,7 @@ const Room = () => {
   };
 
 
-  useEffect(() => {
-    if (roomId) {
-      const socket = io(API_URL);
-      setSocket(socket);
-
-      socket.emit('joinRoom', roomId);
-
-      socket.on('newChatMessage', (message) => {
-        setChatMessages((prevMessages) => [...prevMessages, message]);
-      });
-
-      return () => {
-        socket.disconnect();
-      };
-    }
-  }, [roomId]);
+  
 
 
 
@@ -315,7 +300,7 @@ const Room = () => {
       </div>
 
       {/* chat starts here */}
-      <div className="chat-container max-w-[400px] w-full bg-gray-100 p-4 m-4 flex flex-col shadow-lg h-screen">
+      <div className="chat-container max-w-[400px] w-full bg-gray-100 p-4 ml-4 mt-4 mr-4 flex flex-col shadow-lg h-screen">
         <div className="messages flex-1 overflow-y-auto m-4 text-black space-y-2">
           {chatMessages.map((msg, index) => (
             <div

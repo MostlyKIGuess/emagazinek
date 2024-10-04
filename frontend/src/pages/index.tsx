@@ -42,8 +42,7 @@ export default function Homes() {
       router.push(`/create/${newRoomId}?username=${creator}`);
     } else if (type === 'join') {
       try {
-    
-        const response = await axios.post(`${API_URL}/api/rooms/join`, { roomId, username });
+        const response = await axios.get(`${API_URL}/api/rooms/frames/${roomId}`,{params: { username }});
         if (response.status === 200 && response.data) {
           router.push(`/join/${roomId}?username=${username}`);
         } else {
@@ -107,7 +106,7 @@ export default function Homes() {
         </Select>
         {creatingRoom && (
           <Typography variant="h6" sx={{ color: 'black', textAlign: 'center', marginBottom: 2 }}>
-            Creating room...Pls wait
+            {type === 'create' ? 'Creating room...' : 'Joining room...'}
           </Typography>
         )}
         {type === 'create' && (

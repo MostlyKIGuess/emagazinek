@@ -48,6 +48,8 @@ exports.createRoom = async (req, res) => {
     return res.status(400).send('Missing roomId or image data');
   }
 
+
+
   const params = {
     Bucket: 'animak',
     Key: `${Date.now()}_${roomId}.png`,
@@ -119,3 +121,19 @@ exports.fetchChats =  async (req, res) => {
 
 
 
+exports.joinRoom = async (req, res) => {
+  const { roomId, userId } = req.body;
+  try {
+    const room = await Room.findById
+    (roomId);
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+    room.participants.push(userId);
+    await room.save();
+    res.json({ message: 'Joined room successfully' });
+  }
+  catch (error) {
+    res.status(500).send('Error joining room');
+  }
+}

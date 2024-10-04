@@ -7,5 +7,6 @@ router.post('/frames', addFrameToRoom);
 router.post('/chat', addChatMessageToRoom);
 router.get('/frames/:roomId', fetchFrames);
 router.get('/chat/:roomId', fetchChats);
+// router.get('/join',joinRoom)
 
 module.exports = router;
