@@ -42,6 +42,14 @@ const { GetObjectCommand } = require("@aws-sdk/client-s3");
 
 app.use(express.static("public"));
 
+
+
+
+
+
+
+
+
 app.get("/api/rooms/merge-frames", async (req, res) => {
   const { roomId, videoLengthInSeconds } = req.query; // Accept videoLengthInSeconds parameter
 

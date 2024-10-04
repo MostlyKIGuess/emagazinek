@@ -24,7 +24,7 @@ export default function Homes() {
   const [type, setType] = useState('create'); 
   const [creator, setCreator] = useState('');
   const [roomId, setRoomId] = useState(''); 
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState('undefined');
   const [creatingRoom, setCreatingRoom] = useState(false);
 
 
@@ -37,20 +37,16 @@ export default function Homes() {
     }
     setCreatingRoom(true);
     if (type === 'create') {
-      const response = await axios.post(`${API_URL}/api/rooms`, { creator });
+      const response = await axios.post(`${API_URL}/api/rooms`, { creator : username });
       const newRoomId = response.data.room._id;
-      router.push(`/create/${newRoomId}`);
+      router.push(`/create/${newRoomId}?username=${creator}`);
     } else if (type === 'join') {
       try {
     
-        const response = await axios.get(`${API_URL}/api/rooms/frames/${roomId}`, {params: { username }});
+        const response = await axios.post(`${API_URL}/api/rooms/join`, { roomId, username });
         if (response.status === 200 && response.data) {
-          
-          router.push(`/join/${roomId}`,
-            // { query: { username } }
-          );
+          router.push(`/join/${roomId}?username=${username}`);
         } else {
-          
           console.error('Room not found or access denied');
         }
       } catch (error) {
@@ -86,7 +82,7 @@ export default function Homes() {
           color: 'black',
           marginBottom: 4,
           maxWidth: 600,
-          fontFamily: "Permanent Marker", 
+          fontFamily: "Times New Roman", 
         }}
       >
         Welcome to <span style={{ color: '#ff1f89' }}>emagazineK!</span> Here, you can chat with friends and create flip book animations together. Start your room now and bring your ideas to life!
@@ -116,7 +112,7 @@ export default function Homes() {
         )}
         {type === 'create' && (
           <TextField
-            label="Creator"
+            label="Username"
             variant="outlined"
             fullWidth
             value={creator}

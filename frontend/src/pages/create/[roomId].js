@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState ,useRef} from "react";
 import io from "socket.io-client";
 import axios from "axios";
 import Canvas from "../../components/canvas";
@@ -9,7 +9,7 @@ import { CircularProgress } from "@mui/material";
 
 const Room = () => {
   const router = useRouter();
-  const { roomId } = router.query;
+  const { roomId, username } = router.query;
   const [socket, setSocket] = useState(null);
   const [videoDuration, setVideoDuration] = useState(); 
   const [videoUrl, setVideoUrl] = useState("");
@@ -19,11 +19,38 @@ const Room = () => {
   const [isLoading, setIsLoading] = useState(false); 
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
+  // const [username, setUsername] = useState("");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const HF_TOKEN = process.env.NEXT_PUBLIC_HF_TOKEN;
 
   const [inspirationPrompt, setInspirationPrompt] = useState("");
   const [inspirationImage, setInspirationImage] = useState(null);
+
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+
+  useEffect(() => {
+    if (roomId) {
+      const socket = io(API_URL);
+      setSocket(socket);
+
+      socket.emit('joinRoom', roomId);
+
+      socket.on('newChatMessage', (message) => {
+        setChatMessages((prevMessages) => [...prevMessages, message]);
+      });
+
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [roomId]);
+
+
 
   
   async function query(data) {
@@ -93,18 +120,21 @@ const Room = () => {
 
   }, [roomId, API_URL]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
 
 
 
   const handleSendChatMessage = async () => {
     if (chatInput.trim()) {
-      const newMessage = { createdBy: "username", message: chatInput };
+      // const newMessage = { createdBy: "username", message: chatInput };
       await axios
         .post(`${API_URL}/api/rooms/chat`, {
           roomId,
           message: chatInput,
-          createdBy: "username",
+          createdBy: username,
         })
         .then((response) => {
           console.log("Chat message sent", response);
@@ -115,7 +145,7 @@ const Room = () => {
       socket.emit("sendChatMessage", {
         roomId,
         message: chatInput,
-        createdBy: "username",
+        createdBy: username,
       });
 
       setChatInput("");
@@ -285,19 +315,39 @@ const Room = () => {
       </div>
 
       {/* chat starts here */}
-      <div className="chat-container max-w-[400px] w-full bg-gray-100 p-4 m-4 flex flex-col shadow-lg h-screen ">
-        <div className="messages flex-1 overflow-y-auto m-4 text-black">
+      <div className="chat-container max-w-[400px] w-full bg-gray-100 p-4 m-4 flex flex-col shadow-lg h-screen">
+        <div className="messages flex-1 overflow-y-auto m-4 text-black space-y-2">
           {chatMessages.map((msg, index) => (
-            <p key={index}>
-              <strong>{msg.createdBy}:</strong> {msg.message}
-            </p>
+            <div
+              key={index}
+              className={`flex ${
+                msg.createdBy === username ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`p-2 rounded-lg shadow-md w-[70%] ${
+                  msg.createdBy === username
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-300 text-black"
+                }`}
+              >
+                <p className="font-bold text-sm">{msg.createdBy}</p>
+                <p className="text-sm">{msg.message}</p>
+              </div>
+            </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
         <div className="p-4">
           <input
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSendChatMessage();
+              }
+            }}
             placeholder="Type a message..."
             className="input duration-input text-black border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 w-full px-3 py-2 mb-4"
           />
