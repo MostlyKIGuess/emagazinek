@@ -20,7 +20,7 @@ const Room = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const HF_TOKEN = process.env.NEXT_PUBLIC_HF_TOKEN;
+const HF_TOKEN = process.env.NEXT_PUBLIC_H_TOKEN;
 
   const [inspirationPrompt, setInspirationPrompt] = useState("");
   const [inspirationImage, setInspirationImage] = useState(null);
@@ -28,9 +28,11 @@ const Room = () => {
   
   async function query(data) {
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/prompthero/openjourney-v4",
+      "https://api-inference.huggingface.co/models/CompVis/stable-diffusion-v1-4",
       {
-        headers: { Authorization: `Bearer ${HF_TOKEN}` },
+        headers: { Authorization: `Bearer ${HF_TOKEN}`,
+        "Content-Type": "application/json"
+      },
         method: "POST",
         body: JSON.stringify(data),
       }

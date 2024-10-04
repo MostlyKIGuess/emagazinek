@@ -28,9 +28,11 @@ const Room = () => {
   
   async function query(data) {
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/prompthero/openjourney-v4",
+      "https://api-inference.huggingface.co/models/CompVis/stable-diffusion-v1-4",
       {
-        headers: { Authorization: `Bearer ${HF_TOKEN}` },
+        headers: { Authorization: `Bearer ${HF_TOKEN}`, 
+        "Content-Type": "application/json"
+      },
         method: "POST",
         body: JSON.stringify(data),
       }

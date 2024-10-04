@@ -9,6 +9,7 @@ import { Container, Typography, TextField, Button, Select, MenuItem, Box } from 
 import '@fontsource/permanent-marker'; 
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import GridPattern from '@/components/ui/animated-grid-pattern';
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -64,10 +65,11 @@ export default function Homes() {
 
 
   return (
+  <div>
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'radial-gradient(circle, rgba(0,50,50,0.5) 0%, rgba(0,255,255,0.6) 100%)',
+        background: 'white',
         display: 'flex',
         flexDirection: 'column', 
         alignItems: 'center',
@@ -81,16 +83,17 @@ export default function Homes() {
         gutterBottom
         align="center"
         sx={{
-          color: 'white',
+          color: 'black',
           marginBottom: 4,
           maxWidth: 600,
-          fontFamily: '"Permanent Marker", cursive', 
+          fontFamily: '"Permanent Marker", 
         }}
       >
         Welcome to <span style={{ color: '#ff1f89' }}>emagazineK!</span> Here, you can chat with friends and create flip book animations together. Start your room now and bring your ideas to life!
         {/* Welcome to <span style={{ color: '#ff1f89' }}>emagazineK</span>, a place where people can collaborate with their friends and make flip book animation while chatting. Please make a room to start. */}
       </Typography>
-      <Container maxWidth="sm" sx={{ background: '#ffffffaa', padding: 4, borderRadius: 2, boxShadow: 3 }}>
+
+      <Container maxWidth="sm" sx={{ background: '#ececec', padding: 4, borderRadius: 2, boxShadow: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" color='textPrimary'>
           Room Action
         </Typography>
@@ -150,6 +153,11 @@ export default function Homes() {
           {type === 'create' ? 'Create' : 'Join'}
         </Button>
       </Container>
+
     </Box>
+    <GridPattern
+     />
+
+    </div>
   );
 }
